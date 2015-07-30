@@ -1,0 +1,24 @@
+<section id="missionBlock">
+  <div class="panel" ng-class="blockType">
+    <div class="panel-heading">
+
+      <div class="row">
+        <div class="col-xs-6">
+          {{blockName}}
+        </div>
+        <div class="col-xs-6">
+          <button class="btn btn-default btn-xs pull-right" ng-click="appendNode()">Add to Playlist</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body">
+
+        <p ng-show="type=='Primary'">Basic mission control. Take off, land. Loiter. Two of these added to the beginning end of your mission by default.</p>
+        <p ng-show="type=='Move'">Basic flight control. Move UAV in a direction, change directions, control the speed of the change.</p>
+        <p ng-show="type=='Maneuver'">Choose a preselected flight pattern. Control how fast it is performed.</p>
+        <p ng-show="type=='LEDs'">Change LED pattern. Control how long the pattern lasts and the frequencey.</p>
+
+
+    </div>
+  </div>
+</section>

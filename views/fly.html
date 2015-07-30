@@ -1,0 +1,155 @@
+<secton id="flyView">
+  <div class="row">
+    <alert ng-repeat="alert in alerts" type="{{alert.type}}" close="closeAlert($index)">{{alert.msg}}</alert>
+  </div>
+  <div class="row">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        First Person Video
+      </div>
+      <div class="panel-body">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+          <div id="droneStream" class="center-block"></div>
+          <script type="text/javascript" charset="utf-8">
+            new NodecopterStream(document.getElementById("droneStream"), {hostname: '127.0.0.1'});
+          </script>
+        </div>
+      </div>
+      <div class="col-sm-1"></div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Control
+        </div>
+        <div class="panel-body">
+          <span class="lead">MAIN </span>
+          <button class="btn btn-default" ng-click="Fly(isFlying)" aria-label="Takeoff/land">
+            {{isFlying ? "Land" : "Take Off"}}
+          </button>
+
+          <button class="btn btn-default" ng-click="Stop()" aria-label="Stop">Stop Maneuver</button>
+          <button class="btn btn-default" ng-click="Clear()" aria-label="Clear Emergency">Clear</button>
+          <hr>
+          <span class="lead">TRAN </span>
+          <button class="btn btn-default" ng-click="MoveUp(currentMove)" aria-label="Fly Up">
+            <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+          </button>
+          <button class="btn btn-default" ng-click="MoveDown(currentMove)" aria-label="Fly Down">
+            <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+          </button>
+          <button class="btn btn-default" ng-click="MoveLeft(currentMove)" aria-label="Fly Left">
+            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+          </button>
+          <button class="btn btn-default" ng-click="MoveRight(currentMove)" aria-label="Fly Right">
+            <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
+          </button>
+
+          <input class="form-control" type="number" min="0" max="1" step=".1" ng-model="currentMove">
+          <hr>
+          <span class="lead">ROT </span>
+          <button class="btn btn-default" ng-click="CounterClockwise(currentRot)" aria-label="CounterClockwise Rotation">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+          </button>
+
+          <button class="btn btn-default" ng-click="Clockwise(currentRot)" aria-label="Clockwise Rotation">
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+          </button>
+          <input class="form-control" type="number" ng-model="currentRot">
+          <hr>
+          <span class="lead">FLIGHT </span>
+          <button class="btn btn-default" ng-click="Maneuver(flightPerf, 1000)" aria-label="Perform flight manuever">Maneuver</button>
+          <select class="form-control" ng-model="flightPerf">
+            <option
+              ng-selected="{{flight == flightPerf}}"
+              ng-repeat="flight in flightPerfs"
+              value="{{flight}}">
+              {{flight}}
+            </option>
+          </select>
+          <hr>
+          <span class="lead">LEDs </span>
+          <button class="btn btn-default" ng-click="LedAnimation(selectedLed, 5, 5)" aria-label="Animate LEDs">Animate</button>
+          <select class="form-control" ng-model="selectedLed">
+            <option
+              ng-selected="{{led == selectedLed}}"
+              ng-repeat="led in leds"
+              value="{{led}}">
+              {{led}}
+            </option>
+          </select>
+
+
+                    <!-- <pre>{{telemetry.droneState}}</pre> -->
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Telemetry
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-sm-6">
+              <p class="lead">ALT {{telemetry.demo.altitude}}</p>
+              <p class="lead">HDG {{telemetry.demo.rotation.yaw}}deg</p>
+              <p class="lead">PITCH {{telemetry.demo.rotation.pitch}}deg</p>
+              <p class="lead">ROLL {{telemetry.demo.rotation.roll}}deg</p>
+            </div>
+            <div class="col-sm-6">
+              <p class="lead">BAT {{telemetry.demo.batteryPercentage}} %</p>
+              <p class="lead">AIRSPD {{telemetry.demo.xVelocity}}</p>
+              <p class="lead">YVEL {{telemetry.demo.yVelocity}}</p>
+              <p class="lead">ZVEL {{telemetry.demo.zVelocity}}</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-6">
+              <p class="lead">{{telemetry.demo.flyState}}</p>
+            </div>
+            <div class="col-sm-6">
+              <p class="lead">{{telemetry.demo.controlState}}</p>
+            </div>
+          </div>
+          <div class="row">
+            <p class="text-warning" ng-show="telemetry.droneState.communicationsLost">WARN: COMMS LOST</p>
+            <p class="text-warning" ng-show="telemetry.droneState.lowBattery">WARN: LOW BATTERY</p>
+            <p class="text-warning" ng-show="telemetry.droneState.EmergencyLanding">WARN: EMERGENCY LAND</p>
+            <p class="text-warning" ng-show="telemetry.droneState.MagnometerNeedsCalibration">WARN: MAG CALIB</p>
+            <p class="text-danger" ng-show="telemetry.droneState.softwareFault">FATAL: SOFTWARE FAULT</p>
+            <p class="text-danger" ng-show="telemetry.droneState.motorProblem">FATAL: MOTOR FAILURE</p>
+          </div>
+        </div>
+      </div>
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Graph
+        </div>
+        <div class="panel-body">
+          <epoch-live-line
+            chart-class="category10"
+            chart-height="200"
+            chart-width="400"
+            chart-data="realtimeLine"
+            chart-stream="realtimeLineFeed"
+            chart-axes="areaAxes">
+          </epoch-live-line>
+          <select class="form-control" ng-model="graphSelect">
+            <option>drift</option>
+            <option>altitude</option>
+            <option>yaw</option>
+            <option>pitch</option>
+            <option>roll</option>
+            <option>xVelocity</option>
+            <option>yVelocity</option>
+            <option>zVelocity</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

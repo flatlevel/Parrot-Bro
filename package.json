@@ -1,0 +1,25 @@
+{
+  "name": "parrot-bro",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Geoff Gardner",
+  "license": "ISC",
+  "window": {
+    "title": "Parrot Bro",
+    "icon": "",
+    "toolbar": true,
+    "frame": true,
+    "min_width": 960,
+    "min_height": 520,
+    "resizable": true,
+    "show": true,
+    "position": "center"
+  },
+  "dependencies": {
+    "ws": "^0.7.2"
+  }
+}

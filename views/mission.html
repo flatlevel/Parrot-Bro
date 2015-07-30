@@ -1,0 +1,297 @@
+<secton id="missionView">
+  <h5>
+    The left column is your parrot's current mission, and the right column is types of parrot actions you can choose from. Click and drag mission blocks from the right to left to plan your Parrot's mission!
+  </h5>
+  <div class="row">
+    <div class="col-xs-6">
+      <div class="panel panel-primary">
+        <div class="panel panel-heading">
+          Mission Playlist
+        </div>
+        <div class="panel panel-body" id="missionQueue">
+          <div ng-repeat="mission in missionPlayList track by $index">
+            <div ng-show="mission.kind=='primary'">
+              <!-- Primary Node Panel -->
+              <div class="panel panel-success">
+                <div class="panel panel-heading">
+                  <div class="row">
+                    <div class="col-xs-6">
+                      Control Node {{missionStatus.currentMission==$index? '[IN PROGRESS]' : ''}}
+                    </div>
+                    <div class="col-xs-6">
+                      <button class="btn btn-default btn-xs pull-right" ng-click="removeNode($index)">
+                        <span class="glyphicon glyphicon-remove"></span>
+                      </button>
+                      <button class="btn btn-default btn-xs pull-right" ng-click="NodeUp($index)">
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                      </button>
+                      <button class="btn btn-default btn-xs pull-right" ng-click="NodeDown($index)">
+                        <span class="glyphicon glyphicon-chevron-up"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel panel-body">
+                  <form name="cmds" class="form-inline">
+                    <fieldset class="form-group">
+                      <label for="duration">
+                        Duration (ms)
+                        <input
+                          class="form-control"
+                          type="number"
+                          step="100"
+                          min="100"
+                          max="100000"
+                          ng-model="missionPlayList[$index].duration">
+                      </label>
+                    </fieldset>
+
+                    <fieldset class="form-group">
+                      <label>
+                        Action
+                        <select class="form-control" ng-model="missionPlayList[$index].commandSelect">
+                          <option value="takeoff">Take Off</option>
+                          <option value="land">Land</option>
+                          <option value="stop">Hover</option>
+                        </select>
+                      </label>
+                    </fieldset>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+
+            <div ng-show="mission.kind=='move'">
+              <!-- Move Node Panel -->
+              <div class="panel panel-danger">
+                <div class="panel panel-heading">
+                  <div class="row">
+                    <div class="col-xs-6">
+                      Movement Node {{missionStatus.currentMission==$index? '[IN PROGRESS]' : ''}}
+                    </div>
+                    <div class="col-xs-6">
+                      <button class="btn btn-default btn-xs pull-right" ng-click="removeNode($index)">
+                        <span class="glyphicon glyphicon-remove"></span>
+                      </button>
+                      <button class="btn btn-default btn-xs pull-right" ng-click="NodeUp($index)">
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                      </button>
+                      <button class="btn btn-default btn-xs pull-right" ng-click="NodeDown($index)">
+                        <span class="glyphicon glyphicon-chevron-up"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel panel-body">
+                  <form name="cmds" class="form-inline">
+                    <fieldset class="form-group">
+                      <label for="duration">
+                        Duration (ms)
+                        <input
+                          class="form-control"
+                          type="number"
+                          step="100"
+                          min="100"
+                          max="100000"
+                          ng-model="missionPlayList[$index].duration">
+                      </label>
+                    </fieldset>
+
+                    <fieldset class="form-group">
+                      <label>
+                        Action
+                        <select class="form-control" ng-model="missionPlayList[$index].commandSelect">
+                          <option value="up">Fly Up</option>
+                          <option value="down">Fly Down</option>
+                          <option value="left">Fly Left</option>
+                          <option value="right">Fly Right</option>
+                          <option value="front">Fly Forward</option>
+                          <option value="back">Fly Backward</option>
+                          <option value="clockwise">Rotate Clockwise</option>
+                          <option value="counterClockwise">Rotate Counterclockwise</option>
+                        </select>
+                      </label>
+                    </fieldset>
+
+                    <fieldset class="form-group">
+                      <label for="speed">
+                        Speed
+                        <input
+                          class="form-control"
+                          type="number"
+                          step=".1"
+                          min="0"
+                          max="1"
+                          ng-model="missionPlayList[$index].amount">
+                      </label>
+                    </fieldset>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+
+            <div ng-show="mission.kind=='maneuver'">
+              <!-- Move Node Panel -->
+              <div class="panel panel-info">
+                <div class="panel panel-heading">
+                  <div class="row">
+                    <div class="col-xs-6">
+                      Maneuver Node {{missionStatus.currentMission==$index? '[IN PROGRESS]' : ''}}
+                    </div>
+                    <div class="col-xs-6">
+                      <button class="btn btn-default btn-xs pull-right" ng-click="removeNode($index)">
+                        <span class="glyphicon glyphicon-remove"></span>
+                      </button>
+                      <button class="btn btn-default btn-xs pull-right" ng-click="NodeUp($index)">
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                      </button>
+                      <button class="btn btn-default btn-xs pull-right" ng-click="NodeDown($index)">
+                        <span class="glyphicon glyphicon-chevron-up"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel panel-body">
+                  <form name="cmds" class="form-inline">
+                    <fieldset class="form-group">
+                      <label for="duration">
+                        Duration (ms)
+                        <input
+                          class="form-control"
+                          type="number"
+                          step="100"
+                          min="100"
+                          max="100000"
+                          ng-model="missionPlayList[$index].duration">
+                      </label>
+                    </fieldset>
+
+                    <fieldset class="form-group">
+                      <label>
+                        Action
+                        <select class="form-control" ng-model="missionPlayList[$index].commandSelect">
+                          <option
+                            ng-selected="{{flight == missionPlayList[$index].commandSelect}}"
+                            ng-repeat="flight in flightPerfs"
+                            value="{{flight}}">
+                            {{flight}}
+                          </option>
+                        </select>
+                      </label>
+                    </fieldset>
+
+                  </form>
+                </div>
+              </div>
+            </div>
+
+
+
+            <div ng-show="mission.kind=='leds'">
+              <!-- Move Node Panel -->
+              <div class="panel panel-warning">
+                <div class="panel panel-heading">
+                  <div class="row">
+                    <div class="col-xs-6">
+                      Glow Node {{missionStatus.currentMission==$index? '[IN PROGRESS]' : ''}}
+                    </div>
+                    <div class="col-xs-6">
+                      <button class="btn btn-default btn-xs pull-right" ng-click="removeNode($index)">
+                        <span class="glyphicon glyphicon-remove"></span>
+                      </button>
+                      <button class="btn btn-default btn-xs pull-right" ng-click="NodeUp($index)">
+                        <span class="glyphicon glyphicon-chevron-down"></span>
+                      </button>
+                      <button class="btn btn-default btn-xs pull-right" ng-click="NodeDown($index)">
+                        <span class="glyphicon glyphicon-chevron-up"></span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel panel-body">
+                  <form name="cmds" class="form-inline">
+                    <fieldset class="form-group">
+                      <label for="duration">
+                        Duration (sec)
+                        <input
+                          class="form-control"
+                          type="number"
+                          step="1"
+                          min="1"
+                          max="100"
+                          ng-model="missionPlayList[$index].seconds">
+                      </label>
+                    </fieldset>
+
+                    <fieldset class="form-group">
+                      <label>
+                        Pattern
+                        <select class="form-control" ng-model="missionPlayList[$index].commandSelect">
+                          <option
+                            ng-selected="{{flight == missionPlayList[$index].commandSelect}}"
+                            ng-repeat="flight in leds"
+                            value="{{flight}}">
+                            {{flight}}
+                          </option>
+                        </select>
+                      </label>
+                    </fieldset>
+
+                    <fieldset class="form-group">
+                      <label for="duration">
+                        Frequency (Hz)
+                        <input
+                          class="form-control"
+                          type="number"
+                          step="1"
+                          min="0"
+                          max="60"
+                          ng-model="missionPlayList[$index].freq">
+                      </label>
+                    </fieldset>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+          <!-- <pre>{{missionPlayList | json}}</pre> -->
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-6">
+      <div class="panel panel-default">
+        <div class="panel panel-heading">
+           Mission Blocks
+        </div>
+        <div class="panel panel-body" id="missionBlocks">
+          <mission type="Primary"></mission>
+          <mission type="Move"></mission>
+          <mission type="Maneuver"></mission>
+          <mission type="LEDs"></mission>
+        </div>
+      </div>
+
+      <div class="panel panel-default">
+        <div class="panel panel-heading">
+           Mission Control
+        </div>
+        <div class="panel panel-body" id="missionBlocks">
+          <p ng-show="missionStatus.emt">Estimated Mission Time: {{missionStatus.emt}} </p>
+          <p ng-show="missionStatus.error">{{missionStatus.error}}</p>
+          <p ng-show="missionStatus.ok">Current Node: {{missionStatus.currentMission}}</p>
+          <p ng-show="missionStatus.statusText">Mission Status: {{missionStatus.statusText}}</p>
+          <progress>
+            <bar ng-repeat="bar in missionStatus.status track by $key" value="bar.percent" type="{{bar.type}}">
+              <span ng-hide="bar.value < 5">{{bar.percent}}%</span>
+            </bar>
+          </progress>
+          <button class="btn btn-primary" ng-click="runMission()">Execute Mission</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
