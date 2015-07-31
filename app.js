@@ -697,20 +697,12 @@ console.log(client);
 
         $scope.languages = [
           {'name': 'Javascript',
-           'sampleCode':  "var drone = require('ar-drone')\n" +
-                  "var client = drone.createClient(); \n\n" +
-                  "client.takeoff();\n\n" +
-                  "client.after(3000, function() { \n" +
+           'sampleCode':
+                  "client.takeoff();\n" +
+                  "client.after(5000, function() { \n" +
                   "  this.stop();\n" +
                   "  this.land();\n" +
                   "});"
-          },
-          {'name': 'C/C++',
-           'sampleCode':  "#include <iostream>\n\n" +
-                  "int main(int argc, char* argv[]) {\n\n" +
-                  " std::cout << \"Hello World\\r\\n\";\n\n" +
-                  " return 0;\n" +
-                  "}"
           }
         ];
 
@@ -719,7 +711,6 @@ console.log(client);
         var con = null;
 
         $scope.editorOptions = {
-          theme:'twilight',
           animatedScroll: true,
           showPrintMargin: false,
           mode: $scope.language.name.toLowerCase(),
@@ -746,7 +737,6 @@ console.log(client);
         };
 
         $scope.consoleOptions = {
-          theme:'twilight',
           animatedScroll: true,
           showPrintMargin: false,
           showLineNumbers: false,
