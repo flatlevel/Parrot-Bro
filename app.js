@@ -211,10 +211,79 @@ console.log(client);
         })
       ;
     })
+    .factory('FlightSaver', function() {
+      var firstEvent = false;
+      var activeFd = null;
+      var startDate = null;
+      var bufferedData = '';
+
+
+
+      return {
+        startSave: function() {
+
+          // stop current file write.
+          if (activeFd) {
+            activeFd.end('],\n"end": "' + new Date() + '",\n}\n');
+          }
+
+          startDate = new Date();
+          activeFd = require('fs').createWriteStream('flights/flight_'+startDate+'.json');
+
+            // If the OS can't keep up with our write requests, we need to buffer
+            // and wait.
+            activeFd.on('drain', function() {
+              activeFd.write(bufferedData);
+            });
+
+            activeFd.on('finish', function() {
+              activeFd = null;
+              startDate = null;
+              bufferedData = '';
+              firstEvent = false;
+            });
+
+            // write initial json header
+            activeFd.write('{\n"start": "'+startDate+'",\n"flight": [\n');
+
+        },
+        persist: function(data, kind) {
+          if (!activeFd) {
+            return;
+          }
+
+          var addComma = '';
+
+          if (firstEvent) {
+            addComma += ',';
+          } else {
+            firstEvent = !firstEvent;
+          }
+
+          var json = addComma+JSON.stringify({
+            event: kind,
+            at: new Date(),
+            data: data
+          });
+
+          if (!activeFd.write(json)) {
+            bufferedData += json;
+          }
+        },
+        endSave: function() {
+          if (!activeFd) {
+            return;
+          }
+
+          activeFd.end('],\n"end": "' + new Date() + '"\n}\n');
+        }
+      }
+    })
     // Want this to be a service so the mission data can be preserved.
-    .factory('MissionPlayer', function($timeout) {
+    .factory('MissionPlayer', function($timeout, FlightSaver) {
       var missionData = [];
-      var EMT_TAKEOFFDEFAULT = 10000
+      var EMT_TAKEOFFDEFAULT = 10000;
+      var isInMission = false;
 
       var compiledMission = {
         emt: NaN,
@@ -363,12 +432,24 @@ console.log(client);
           compiledMission.statusText = "Initial take off.";
           client.takeoff();
 
+          client.on('navdata', function(data) {
+            if (isInMission) {
+              FlightSaver.persist(data, 'telemetry');
+            }
+          });
+
           function processCmd() {
             client.stop();
 
             if (!compiledMission.ok) {
               compiledMission.statusText = "Mission aborted. Landing.";
               client.land();
+              FlightSaver.persist({
+                kind: 'primary',
+                commandSelect: 'land'
+              },'command');
+              FlightSaver.endSave();
+              isInMission = false;
               console.log("********************** ABORT **************************");
               return;
             }
@@ -377,6 +458,12 @@ console.log(client);
               compiledMission.statusText = "Mission completed. Landing.";
               compiledMission.currentMission++;
               client.land();
+              FlightSaver.persist({
+                kind: 'primary',
+                commandSelect: 'land'
+              },'command');
+              FlightSaver.endSave();
+              isInMission = false;
               console.log("************************ END *************************");
               return;
             }
@@ -385,6 +472,7 @@ console.log(client);
 
             iter = missionIter.shift();
             compiledMission.currentMission++;
+            FlightSaver.persist(iter, 'command');
             switch (iter.kind) {
               case 'primary':
                 client[iter.commandSelect]();
@@ -415,12 +503,22 @@ console.log(client);
 
           // Get the ball rolling.
           console.log("******************************************************");
+          isInMission = true;
+          FlightSaver.startSave();
+          FlightSaver.persist({
+            kind: 'primary',
+            duration: 10000,
+            commandSelect: 'takeoff'
+          },'command');
           compiledMission.emt-=EMT_TAKEOFFDEFAULT;
           $timeout(processCmd, EMT_TAKEOFFDEFAULT);
 
         },
         endMission: function() {
           compiledMission.ok = false;
+        },
+        inMission: function() {
+          return isInMission;
         }
       };
     })
@@ -500,7 +598,7 @@ console.log(client);
       };
 
     })
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope) {
+    .controller('FlightCtrl', function($scope, $timeout, $rootScope, MissionPlayer, FlightSaver) {
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
@@ -612,6 +710,10 @@ console.log(client);
             case 'zVelocity': $scope.realtimeLineFeed = liveLineData.next(data.demo.zVelocity); break;
           }
         }
+
+        // if (MissionPlayer.inMission()) {
+        //
+        // }
       });
 
 
