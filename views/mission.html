@@ -15,10 +15,10 @@
               <div class="panel panel-success">
                 <div class="panel panel-heading">
                   <div class="row">
-                    <div class="col-xs-6">
+                    <div class="col-xs-8">
                       Control Node {{missionStatus.currentMission==$index? '[IN PROGRESS]' : ''}}
                     </div>
-                    <div class="col-xs-6">
+                    <div class="col-xs-4">
                       <button class="btn btn-default btn-xs pull-right" ng-click="removeNode($index)">
                         <span class="glyphicon glyphicon-remove"></span>
                       </button>
@@ -67,10 +67,10 @@
               <div class="panel panel-danger">
                 <div class="panel panel-heading">
                   <div class="row">
-                    <div class="col-xs-6">
+                    <div class="col-xs-8">
                       Movement Node {{missionStatus.currentMission==$index? '[IN PROGRESS]' : ''}}
                     </div>
-                    <div class="col-xs-6">
+                    <div class="col-xs-4">
                       <button class="btn btn-default btn-xs pull-right" ng-click="removeNode($index)">
                         <span class="glyphicon glyphicon-remove"></span>
                       </button>
@@ -137,10 +137,10 @@
               <div class="panel panel-info">
                 <div class="panel panel-heading">
                   <div class="row">
-                    <div class="col-xs-6">
+                    <div class="col-xs-8">
                       Maneuver Node {{missionStatus.currentMission==$index? '[IN PROGRESS]' : ''}}
                     </div>
-                    <div class="col-xs-6">
+                    <div class="col-xs-4">
                       <button class="btn btn-default btn-xs pull-right" ng-click="removeNode($index)">
                         <span class="glyphicon glyphicon-remove"></span>
                       </button>
@@ -171,13 +171,10 @@
                     <fieldset class="form-group">
                       <label>
                         Action
-                        <select class="form-control" ng-model="missionPlayList[$index].commandSelect">
-                          <option
-                            ng-selected="{{flight == missionPlayList[$index].commandSelect}}"
-                            ng-repeat="flight in flightPerfs"
-                            value="{{flight}}">
-                            {{flight}}
-                          </option>
+                        <select
+                          class="form-control"
+                          ng-model="missionPlayList[$index].commandSelect"
+                          ng-options="flight for flight in flightPerfs">
                         </select>
                       </label>
                     </fieldset>
@@ -194,10 +191,10 @@
               <div class="panel panel-warning">
                 <div class="panel panel-heading">
                   <div class="row">
-                    <div class="col-xs-6">
+                    <div class="col-xs-8">
                       Glow Node {{missionStatus.currentMission==$index? '[IN PROGRESS]' : ''}}
                     </div>
-                    <div class="col-xs-6">
+                    <div class="col-xs-4">
                       <button class="btn btn-default btn-xs pull-right" ng-click="removeNode($index)">
                         <span class="glyphicon glyphicon-remove"></span>
                       </button>
@@ -228,13 +225,9 @@
                     <fieldset class="form-group">
                       <label>
                         Pattern
-                        <select class="form-control" ng-model="missionPlayList[$index].commandSelect">
-                          <option
-                            ng-selected="{{flight == missionPlayList[$index].commandSelect}}"
-                            ng-repeat="flight in leds"
-                            value="{{flight}}">
-                            {{flight}}
-                          </option>
+                        <select class="form-control"
+                          ng-model="missionPlayList[$index].commandSelect"
+                          ng-options="led for led in leds">
                         </select>
                       </label>
                     </fieldset>
@@ -280,16 +273,18 @@
            Mission Control
         </div>
         <div class="panel panel-body" id="missionBlocks">
-          <p ng-show="missionStatus.emt">Estimated Mission Time: {{missionStatus.emt}} </p>
+          <p ng-show="missionStatus.emt">Mission Time Remaining: {{missionStatus.emt / 1000}} seconds</p>
           <p ng-show="missionStatus.error">{{missionStatus.error}}</p>
           <p ng-show="missionStatus.ok">Current Node: {{missionStatus.currentMission}}</p>
           <p ng-show="missionStatus.statusText">Mission Status: {{missionStatus.statusText}}</p>
           <progress>
-            <bar ng-repeat="bar in missionStatus.status track by $key" value="bar.percent" type="{{bar.type}}">
+            <bar ng-repeat="bar in missionStatus.progress track by $index" value="bar.percent" type="{{bar.type}}">
               <span ng-hide="bar.value < 5">{{bar.percent}}%</span>
             </bar>
           </progress>
           <button class="btn btn-primary" ng-click="runMission()">Execute Mission</button>
+          <button class="btn btn-primary" ng-click="abortMission()">Abort Mission</button>
+          <!-- <pre>{{missionStatus | json}}</pre> -->
         </div>
       </div>
     </div>

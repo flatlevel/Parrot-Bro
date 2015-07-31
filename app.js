@@ -214,31 +214,14 @@ console.log(client);
     // Want this to be a service so the mission data can be preserved.
     .factory('MissionPlayer', function($timeout) {
       var missionData = [];
+      var EMT_TAKEOFFDEFAULT = 10000
 
       var compiledMission = {
         emt: NaN,
         ok: false,
         currentMission: NaN,
         error: null,
-        statusText: null,
-        progress: {
-          primary: {
-            type: 'success',
-            value: 0
-          },
-          move: {
-            type: 'danger',
-            value: 0
-          },
-          maneuver: {
-            type: 'info',
-            value: 0
-          },
-          leds: {
-            type: 'warning',
-            value: 0
-          }
-        }
+        statusText: null
       };
 
       function move(array, old_index, new_index) {
@@ -274,99 +257,95 @@ console.log(client);
         },
         // Does not actually run the mission, just checks for errors.
         compileMission: function() {
-          compiledMission.emt = 5000;
+          compiledMission.emt = EMT_TAKEOFFDEFAULT;
           compiledMission.ok = false;
 
-          compiledMission.progress = {
-            primary: {
+          compiledMission.progress = [
+            {
               type: 'success',
               value: 0
             },
-            move: {
+            {
               type: 'danger',
               value: 0
             },
-            maneuver: {
+            {
               type: 'info',
               value: 0
             },
-            leds: {
+            {
               type: 'warning',
               value: 0
             }
-          };
+          ];
 
           angular.forEach(missionData, function(data) {
             switch (data.kind) {
               case 'primary':
                 if (data.duration < 100 || data.duration > 100000) {
-                  compileMission.error = "Out of Range: " + data.duration;
+                  compiledMission.error = "Out of Range: " + data.duration;
                   return;
                 } else if (!data.commandSelect) {
-                  compileMission.error = "Undefined Command";
+                  compiledMission.error = "Undefined Command";
                   return;
                 } else {
                   compiledMission.emt += data.duration;
-                  compiledMission.progress.primary.value += data.duration;
+                  compiledMission.progress[0].value += data.duration;
                 }
                 break;
               case 'move':
                 if (data.duration < 100 || data.duration > 100000) {
-                  compileMission.error = "Out of Range: " + data.duration;
+                  compiledMission.error = "Out of Range: " + data.duration;
                   return;
                 } else if (!data.commandSelect) {
-                  compileMission.error = "Undefined Command";
+                  compiledMission.error = "Undefined Command";
                   return;
                 } else if (data.amount < 0 || data.amount > 1) {
-                  compileMission.error = "Out of Range: " + data.amount;
+                  compiledMission.error = "Out of Range: " + data.amount;
                   return;
                 } else {
                   compiledMission.emt += data.duration;
-                  compiledMission.progress.move.value += data.duration;
+                  compiledMission.progress[1].value += data.duration;
                 }
                 break;
               case 'maneuver':
                 if (data.duration < 100 || data.duration > 100000) {
-                  compileMission.error = "Out of Range: " + data.duration;
+                  compiledMission.error = "Out of Range: " + data.duration;
                   return;
                 } else if (!data.commandSelect) {
-                  compileMission.error = "Undefined Command";
+                  compiledMission.error = "Undefined Command";
                   return;
                 } else {
                   compiledMission.emt += data.duration;
-                  compiledMission.progress.maneuver.value += data.duration;
+                  compiledMission.progress[2].value += data.duration;
                 }
                 break;
               case 'leds':
                 if (data.duration < 1 || data.duration > 100) {
-                  compileMission.error = "Out of Range: " + data.seconds;
+                  compiledMission.error = "Out of Range: " + data.seconds;
                   return;
                 } else if (!data.commandSelect) {
-                  compileMission.error = "Undefined Command";
+                  compiledMission.error = "Undefined Command";
                   return;
                 } else if (data.freq < 0 || data.freq > 60) {
-                  compileMission.error = "Out of Range: " + data.freq;
+                  compiledMission.error = "Out of Range: " + data.freq;
                   return;
                 } else {
                   compiledMission.emt += 100;
-                  compiledMission.progress.leds.value += data.duration;
+                  compiledMission.progress[3].value += 100;
                 }
                 break;
               default:
-                compileMission.error = "Unknown type: " + data.kind;
+                compiledMission.error = "Unknown type: " + data.kind;
                 return;
             }
           });
 
           // calculate progressbar
-          compiledMission.progress.primary.percent =
-            Math.floor((compiledMission.progress.primary.percent / compiledMission.emt) * 100);
-          compiledMission.progress.move.percent =
-            Math.floor((compiledMission.progress.move.percent / compiledMission.emt) * 100);
-          compiledMission.progress.maneuver.percent =
-            Math.floor((compiledMission.progress.maneuver.percent / compiledMission.emt) * 100);
-          compiledMission.progress.leds.percent =
-            Math.floor((compiledMission.progress.leds.percent / compiledMission.emt) * 100);
+          compiledMission.progress[0].value += 10000;
+          angular.forEach(compiledMission.progress, function(bar) {
+            bar.percent = Math.round((bar.value / compiledMission.emt) * 100);
+          });
 
           compiledMission.ok = true;
         },
@@ -386,14 +365,25 @@ console.log(client);
 
           function processCmd() {
             client.stop();
+
+            if (!compiledMission.ok) {
+              compiledMission.statusText = "Mission aborted. Landing.";
+              client.land();
+              console.log("********************** ABORT **************************");
+              return;
+            }
+
             if (missionIter.length <= 0) {
               compiledMission.statusText = "Mission completed. Landing.";
               compiledMission.currentMission++;
               client.land();
+              console.log("************************ END *************************");
               return;
             }
 
-            iter = missionIter.pop();
+            console.log("************* MISSSION SWITCH *************");
+
+            iter = missionIter.shift();
             compiledMission.currentMission++;
             switch (iter.kind) {
               case 'primary':
@@ -424,9 +414,13 @@ console.log(client);
           }
 
           // Get the ball rolling.
-          compiledMission.emt-=5000;
-          $timeout(processCmd, 5000);
+          console.log("******************************************************");
+          compiledMission.emt-=EMT_TAKEOFFDEFAULT;
+          $timeout(processCmd, EMT_TAKEOFFDEFAULT);
 
+        },
+        endMission: function() {
+          compiledMission.ok = false;
         }
       };
     })
@@ -846,8 +840,18 @@ console.log(client);
       };
 
       $scope.runMission = function() {
+        // Some initial stuff
+        client.stop();
+        client.land();
+        client.disableEmergency();
         MissionPlayer.compileMission();
         MissionPlayer.runMission();
+      }
+
+      $scope.abortMission = function() {
+        MissionPlayer.endMission();
+        client.stop();
+        client.land();
       }
 
       // Set up drag/drop logic
@@ -921,8 +925,8 @@ console.log(client);
           $scope.blockName = 'Control Node';
           nodeInfo = {
             kind: 'primary',
-            duration: 5000,
-            commandSelect: 'takeoff'
+            duration: 2000,
+            commandSelect: 'stop'
           };
           break;
         case 'Move':
@@ -940,7 +944,7 @@ console.log(client);
           $scope.blockName = 'Flight Maneuver Node';
           nodeInfo = {
             kind: 'maneuver',
-            duration: 1000,
+            duration: 4000,
             commandSelect: 'wave',
           };
           break;
