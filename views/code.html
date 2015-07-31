@@ -1,3 +1,16 @@
 <secton id="codeView">
-  <h1 class="lead">This is the code view.</h1>
+	<div class="row">
+		<div id="terminalEditor" ui-ace="editorOptions" ng-model="language.sampleCode" style="height: 60vh;"></div>
+	</div>
+	<div id="editorToolbar" class="row">
+			<input class="btn btn-primary" type="button" ng-click="run()" value="RUN >>">
+			<input class="btn btn-primary" type="button" ng-click="reset()" value="RESET >>">
+			<input class="btn btn-default" type="button" ng-click="undoBtn()" value="UNDO">
+			<input class="btn btn-default" type="button" ng-click="redoBtn()" value="REDO">
+			<input class="btn btn-default" type="button" ng-click="land()" value="Land">
+			<progressbar class="progress-striped active" value="dynamic" type="{{type}}">{{message}}</progressbar>
+	</div>
+	<div class="row">
+		<div id="console" ui-ace="consoleOptions" ng-model="world" style="height: 30vh;"></div>
+	</div>
 </section>
