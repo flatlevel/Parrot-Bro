@@ -873,7 +873,38 @@ console.log(client);
       //   });
 
     })
-    .controller('ForgeCtrl', function($scope) {
+    .controller('ForgeCtrl', function($scope, $http, $window) {
+      var onlineStatus = {};
+      $scope.loginInfo = {};
+
+      onlineStatus.isOnLine = $window.navigator.onLine;
+      
+      // it's not neccessary, it can be removed
+      onlineStatus.onLine = function() {
+        return onlineStatus.isOnLine;
+      }
+
+      if (onlineStatus.isOnLine) 
+        $scope.online = true;
+      else
+        $scope.online = false;
+
+      $scope.login = function() {
+        $http
+          // need to change the url to live forge 
+          .post('http://localhost:4000/api/session', 
+            { email: $scope.loginInfo.email, 
+              password: $scope.loginInfo.password
+            }
+          )
+          .success(function(data, status) {
+            angular.element('#message').text(data._id);
+            console.log(data);
+          })
+          .error(function(data, status) {
+            angular.element('#message').text(data.error);
+          })
+      }
 
     })
     .controller('ConnectCtrl', function($scope, $modalInstance) {
