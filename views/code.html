@@ -1,3 +1,36 @@
 <secton id="codeView">
-  <h1 class="lead">This is the code view.</h1>
+	<div class="row">
+		<div id="terminalEditor" ui-ace="editorOptions" ng-model="language.sampleCode" style="height: 50vh;"></div>
+	</div>
+	<div id="editorToolbar" class="row" style="height:30px">
+		<div class="col-xs-1" style="padding-left: 0px; padding-right: 0px; margin-bottom: -20px;">
+			<input class="btn btn-primary btn-block" type="button" ng-click="run()" value="RUN >>">
+		</div>
+		<div class="col-xs-1" style="padding-left: 0px; padding-right: 0px; margin-bottom: -20px;">
+			<input class="btn btn-primary btn-block" type="button" ng-click="reset()" value="RESET >>">
+		</div>
+		<div class="col-xs-1" style="padding-left: 0px; padding-right: 0px; margin-bottom: -20px;">
+			<input class="btn btn-primary btn-block" type="button" ng-click="undoBtn()" value="UNDO">
+		</div>
+		<div class="col-xs-1" style="padding-left: 0px; padding-right: 0px; margin-bottom: -20px;">
+			<input class="btn btn-primary btn-block" type="button" ng-click="redoBtn()" value="REDO">
+		</div>
+		<div class="col-xs-1" style="padding-left: 0px; padding-right: 0px; margin-bottom: -20px;">
+			<input class="btn btn-primary btn-block" type="button" ng-click="land()" value="Land">
+		</div>
+		<div class="col-xs-6" style="padding-left: 0px; padding-right: 0px; margin-bottom: -20px;">
+			<progressbar class="progress-striped active" value="dynamic" type="{{type}}">{{message}}</progressbar>
+		</div>
+		<div class="col-xs-2" style="padding-left: 0px; padding-right: 0px; margin-bottom: -20px;">
+			<select class="form-control" style="border-radius: 0px;" ng-model='language' ng-options='language.name for language in languages'
+				ng-change="languageChanged()"></select>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-xs-12" style="padding-left: 0px; padding-right: 0px;">
+			<div id="console" ui-ace="consoleOptions" ng-model="world" style="height: 28vh;"></div>
+		</div>
+	</div>
 </section>
+
+<script src="ardrone.js"></script>
