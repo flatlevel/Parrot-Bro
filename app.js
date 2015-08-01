@@ -204,14 +204,29 @@ console.log(client);
           templateUrl:    'views/code.html',
           controller:     'CodeCtrl'
         })
-        .state('forge', {
+        .state('login', {
           url:            '/',
+          templateUrl:    'views/forge-login.html',
+          controller:     'LoginCtrl'
+        })
+        .state('forge', {
           templateUrl:    'views/forge.html',
           controller:     'ForgeCtrl'
         })
       ;
     })
-    // Want this to be a service so the mission data can be preserved.
+    .factory('Session',
+      function($resource) {
+        return $resource('http://localhost:4000/api/session', {}, 
+        {
+          sync: {
+            method: 'PUT'
+          },
+          authenticate: {
+            method: 'POST'
+          }
+        });
+    })    // Want this to be a service so the mission data can be preserved.
     .factory('MissionPlayer', function($timeout) {
       var missionData = [];
       var EMT_TAKEOFFDEFAULT = 10000
@@ -873,7 +888,7 @@ console.log(client);
       //   });
 
     })
-    .controller('ForgeCtrl', function($scope, $http, $window) {
+    .controller('LoginCtrl', function($scope, $http, $window, $state, Session) {
       var onlineStatus = {};
       $scope.loginInfo = {};
 
@@ -890,22 +905,38 @@ console.log(client);
         $scope.online = false;
 
       $scope.login = function() {
-        $http
-          // need to change the url to live forge 
-          .post('http://localhost:4000/api/session', 
-            { email: $scope.loginInfo.email, 
-              password: $scope.loginInfo.password
-            }
-          )
-          .success(function(data, status) {
-            angular.element('#message').text(data._id);
-            console.log(data);
+        Session
+          .authenticate($scope.loginInfo)
+          .$promise
+          .then(function(data) {
+            $state.go('forge');
           })
-          .error(function(data, status) {
-            angular.element('#message').text(data.error);
-          })
+        ;
       }
+    })
+    .controller ('ForgeCtrl', function($scope, $state, Session) {
+      $scope.userInfo = null;
 
+      Session
+        .get({}, function(data) {
+          $scope.userInfo = data.userData || null;
+          console.log($scope.userInfo);
+          if (!$scope.userInfo) {
+            $state.go('login');
+          }
+        })
+      ;
+
+      $scope.logout = function() {
+        Session
+          .authenticate({deauth: true})
+          .$promise
+          .then(function(data) {
+            if (!data.userData) {
+              $state.go('login');
+            }
+          });
+      };
     })
     .controller('ConnectCtrl', function($scope, $modalInstance) {
       $scope.ok = function (form) {
