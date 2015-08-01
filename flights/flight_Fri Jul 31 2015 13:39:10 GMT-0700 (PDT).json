@@ -1,6 +1,0 @@
-{
-"start": "Fri Jul 31 2015 13:39:10 GMT-0700 (PDT)",
-"flight": [
-,{"event":"command","at":"2015-07-31T20:39:10.817Z","data":{"kind":"primary","duration":10000,"commandSelect":"takeoff"}},{"event":"command","at":"2015-07-31T20:39:20.821Z","data":{"kind":"move","duration":2000,"commandSelect":"up","amount":0.2}},{"event":"command","at":"2015-07-31T20:39:22.823Z","data":{"kind":"primary","commandSelect":"land"}}],
-"end": "Fri Jul 31 2015 13:39:22 GMT-0700 (PDT)"
-}
