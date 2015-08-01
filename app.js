@@ -9,13 +9,32 @@
   var parser = new Parser();
 
   var client = drone.createClient();
-  // var tcpVideoStream = client.getVideoStream();
+  var tcpVideoStream = client.getVideoStream();
   // var output = require('fs').createWriteStream('./vid.mp4');
-  // client.config('video:video_channel', 0);
+  client.config('video:video_channel', 0);
+
+var fpvObject;
 
 console.log(client);
 
   // tcpVideoStream.on('data', console.log);
+
+  // tcpVideoStream.connect(function() {
+  //   console.log('connected.');
+
+    tcpVideoStream.on('error', function (err) {
+      console.log(err.message);
+      tcpVideoStream.end();
+      tcpVideoStream.emit("end");
+      // init();
+    });
+    // //
+    // // parser = new Parser();
+    tcpVideoStream.on('data', function (data) {
+      // console.log(data);
+      // parser.write(data);
+    });
+  // });
 
   // var server = http.createServer(function(req, res) {});
   // require("dronestream").listen(server);
@@ -81,7 +100,8 @@ console.log(client);
       }
 
       function handleNalUnits(message) {
-          avc.decode(new Uint8Array(message.data));
+                    // console.log(message);
+          avc.decode(new Uint8Array(message));
       }
 
       function handleDecodedFrame(buffer, bufWidth, bufHeight) {
@@ -131,35 +151,40 @@ console.log(client);
           setupCanvas(div);
           setupAvc();
 
+          console.log(div, options);
+
           // socket = new WebSocket(
           //      'ws://' + hostname + ':' + port + '/dronestream'
           // );
           // socket.binaryType = 'arraybuffer';
           // socket.onmessage = handleNalUnits;
 
-          console.log("Connecting to drone");
-
-          // tcpVideoStream.connect();
-          // tcpVideoStream.on('error', function (err) {
-          //   // console.log(err.message);
-          //   // tcpVideoStream.end();
-          //   // tcpVideoStream.emit("end");
-          //   // init();
-          // });
-          // //
-          // // parser = new Parser();
-          // tcpVideoStream.on('data', function (data) {
-          // //   console.log(data);
-          //   parser.write(data);
-          // });
-          // //
-          // parser.on('data', function (data) {
-          //   handleNalUnits(data.payload);
-          // });
+          // console.log('connecting to drone...');
           //
-          // parser.on('end', function(data) {
-          //   output.end();
+          // tcpVideoStream.connect(function() {
+          //   console.log('connected.');
+          //
+          //   tcpVideoStream.on('error', function (err) {
+          //     console.log(err.message);
+          //     tcpVideoStream.end();
+          //     tcpVideoStream.emit("end");
+          //     // init();
+          //   });
+          //   // //
+          parser = new Parser();
+            tcpVideoStream.on('data', function (data) {
+              parser.write(data);
+            });
           // });
+
+          // //
+          parser.on('data', function (data) {
+            handleNalUnits(data.payload);
+          });
+          //
+          parser.on('end', function(data) {
+            output.end();
+          });
 
           // tcpVideoStream.pipe(parser);
       };
@@ -169,7 +194,7 @@ console.log(client);
           callbackOnce = callback;
       };
 
-      window.NodecopterStream = NS;
+      window.FPVStream = NS;
 
   }(window, document, undefined));
 
@@ -279,8 +304,47 @@ console.log(client);
         }
       }
     })
+    .factory('VideoPlayer', function() {
+      var outputStream = null;
+      var parser = new Parser();
+      parser
+        .on('data', function(data) {
+          if (outputStream) {
+            outputStream.write(data.payload);
+          }
+        })
+        .on('end', function() {
+          if (outputStream) {
+            outputStream.end();
+            outputStream = null;
+          }
+        });
+      return {
+        start: function(fname) {
+          var video = client.getVideoStream();
+          if (!video) {
+            console.log("ERROR ON VIDEO SAVER");
+            return;
+          }
+
+          if (outputStream) {
+            outputStream.end();
+          }
+
+          outputStream = require('fs').createWriteStream('videos/'+fname+'.h264');
+          video.pipe(parser);
+        },
+        end: function() {
+          outputStream.end();
+          outputStream = null;
+        },
+        getFileStream: function() {
+          return outputStream;
+        }
+      }
+    })
     // Want this to be a service so the mission data can be preserved.
-    .factory('MissionPlayer', function($timeout, FlightSaver) {
+    .factory('MissionPlayer', function($timeout, FlightSaver, VideoPlayer) {
       var missionData = [];
       var EMT_TAKEOFFDEFAULT = 10000;
       var isInMission = false;
@@ -430,6 +494,7 @@ console.log(client);
           var iter = missionIter[0];
 
           compiledMission.statusText = "Initial take off.";
+          VideoPlayer.start('video_'+new Date());
           client.takeoff();
 
           client.on('navdata', function(data) {
@@ -475,7 +540,16 @@ console.log(client);
             FlightSaver.persist(iter, 'command');
             switch (iter.kind) {
               case 'primary':
-                client[iter.commandSelect]();
+                if (iter.commandSelect == 'payload') {
+                  if (VideoPlayer.getFileStream()) {
+                    VideoPlayer.end();
+                  } else {
+                    VideoPlayer.start('video_'+new Date());
+                  }
+                } else {
+                  client[iter.commandSelect]();
+                }
+
                 $timeout(processCmd, iter.duration);
                 compiledMission.emt-=iter.duration;
                 compiledMission.statusText = "Primary command " + iter.commandSelect + " for " + iter.duration + "ms.";
