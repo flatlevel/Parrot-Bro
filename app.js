@@ -245,7 +245,7 @@ console.log(client);
     })
     .factory('Session',
       function($resource) {
-        return $resource('http://localhost:4000/api/session', {},
+        return $resource('http://stage.dronesmith.io/api/session', {},
         {
           sync: {
             method: 'PUT'
@@ -1118,6 +1118,74 @@ console.log(client);
       var fs = require('fs');
       $scope.userInfo = null;
 
+      //
+      // Syncing algo
+      //
+      $scope.sync = function() {
+        function syncFile(file, done) {
+
+          function processFile(data, done) {
+              var json;
+              try {
+                json = JSON.parse(data);
+                if (!json.hasOwnProperty('_id')) {
+
+                  $http
+                    .post('http://stage.dronesmith.io/api/flight/' + $scope.userInfo._id, json)
+                    .success(function(data) {
+                      console.log(data);
+                      json._id = data.flight;
+                      fs.writeFile('flights/' + file, JSON.stringify(json), function(err) {
+                        if (err) {
+                          done(err);
+                        } else {
+                          done(null);
+                        }
+                      });
+                    })
+                    .error(function(data) {
+                      console.log('Error');
+                      done(data);
+                    })
+                  ;
+                }
+              } catch(e) {
+                done(e, null);
+              }
+          }
+
+          async.waterfall([
+            function(callback) {
+              fs.readFile('flights/' + file, callback);
+            },
+            processFile
+          ], function(error, result) {
+            if (error) {
+              done(error);
+            } else {
+              console.log('file processed');
+              done();
+            }
+          });
+        }
+
+        var files = fs.readdirSync('flights');
+        // OSX has a mental disability.
+        var badfile = files.indexOf('.DS_Store');
+
+        if (badfile > -1) {
+          files.splice(badfile, 1);
+        }
+
+        async.each(files, syncFile, function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('success!');
+          }
+        })
+      };
+
       Session
         .get({}, function(data) {
           $scope.userInfo = data.userData || null;
@@ -1125,55 +1193,8 @@ console.log(client);
             $state.go('login');
           }
           else {
-            $scope.serializeFlights = function() {
 
-            };
-
-            $scope.sync = function() {
-              function syncFile(file, done) {
-
-                function processFile(data, done) {
-                    var json;
-                    try {
-                      json = JSON.stringify(data);
-                      if (!json.hasOwnProperty('_id')) {
-                        json = '{' + '"_id": 1,' + json.substr(1);
-                        fs.writeFile('flights/' + file, json, function (err) {
-                          if (err) throw err;
-                          console.log('It\'s saved');
-                        });
-                      }
-                    } catch(e) {
-                      done(e, null);
-                    }
-                }
-
-                async.waterfall([
-                  function(callback) {
-                    fs.readFile('flights/' + file, callback);
-                  },
-                  processFile
-                ], function(error, result) {
-                  if (error) {
-                    done(error);
-                  } else {
-                    console.log('file processed');
-                    done();
-                  }
-                });
-              }
-
-              var files = fs.readdirSync('flights');
-
-              async.each(files, syncFile, function(err) {
-                if (err) {
-                  console.log(err);
-                } else {
-                  console.log('success!');
-                }
-              })
-            };
-
+            $scope.status = "Syncing flights...";
             // test the sync
             $scope.sync();
 
