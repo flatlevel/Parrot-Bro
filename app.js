@@ -1,8 +1,11 @@
+
 (function() {
 'use strict';
 
   // System Code
   var http = require('http');
+
+  var async = require('async');
 
   var drone = require('ar-drone');
   var Parser = require('./node_modules/ar-drone/lib/video/PaVEParser.js');
@@ -776,21 +779,42 @@ console.log(client);
 
       var chartEntry = [];
 
+
       // Realtime Line
       $scope.realtimeLine = liveLineData.history(0);
       // console.log($scope.realtimeLine);
       $scope.realtimeLineFeed = liveLineData.next(0);
 
+
+      // optical drift canvas render.
+      // Still trying to do research about useable libraries here.
+      // Processingjs doesn't seem to work, so we may need to hack it.
+      // I personally think Processingjs should be apart of the app.
+      var view = document.getElementById('opticalDrift');
+      var ctx = view.getContext('2d');
+      $scope.driftX = 200; $scope.driftY = 200;
+      ctx.fillStyle = "#CCCCCC";
+      ctx.fillRect(0,0,400,400);
+      ctx.lineWidth = 2;
+      ctx.moveTo($scope.driftX, $scope.driftY);
+
       client.on('navdata', function(data) {
         $scope.telemetry = data;
         if (data && data.demo && data.droneState.flying) {
+          $scope.driftX = 200 + Math.ceil(data.demo.drone.camera.translation.x / 10);
+          $scope.driftY = 200 + Math.ceil(data.demo.drone.camera.translation.y / 10);
+          if ($scope.driftX < 400 || $scope.driftX > 0 || $scope.driftY < 400 || $scope.driftY > 0) {
+            ctx.lineTo($scope.driftX,$scope.driftY);
+          }
+          ctx.stroke();
           switch ($scope.graphSelect) {
             case 'drift':  $scope.realtimeLineFeed = liveLineData.next(
               Math.sqrt(
-                  data.demo.detection.camera.translation.x*data.demo.detection.camera.translation.x
-                  + data.demo.detection.camera.translation.y*data.demo.detection.camera.translation.y
-                  + data.demo.detection.camera.translation.z*data.demo.detection.camera.translation.z
-                )); break;
+                  data.demo.drone.camera.translation.x*data.demo.drone.camera.translation.x
+                  + data.demo.drone.camera.translation.y*data.demo.drone.camera.translation.y
+                  + data.demo.drone.camera.translation.z*data.demo.drone.camera.translation.z
+                ));
+                 break;
             case 'altitude': $scope.realtimeLineFeed = liveLineData.next(data.demo.altitude); break;
             case 'yaw': $scope.realtimeLineFeed = liveLineData.next(data.demo.yaw); break;
             case 'pitch': $scope.realtimeLineFeed = liveLineData.next(data.demo.pitch); break;
@@ -1075,7 +1099,6 @@ console.log(client);
       onlineStatus.onLine = function() {
         return onlineStatus.isOnLine;
       }
-
       if (onlineStatus.isOnLine) 
         $scope.online = true;
       else
@@ -1091,15 +1114,69 @@ console.log(client);
         ;
       }
     })
-    .controller ('ForgeCtrl', function($scope, $state, Session) {
+    .controller ('ForgeCtrl', function($scope, $state, Session, $http) {
+      var fs = require('fs');
       $scope.userInfo = null;
 
       Session
         .get({}, function(data) {
           $scope.userInfo = data.userData || null;
-          console.log($scope.userInfo);
           if (!$scope.userInfo) {
             $state.go('login');
+          }
+          else {
+            $scope.serializeFlights = function() {
+
+            };
+
+            $scope.sync = function() {
+              function syncFile(file, done) {
+
+                function processFile(data, done) {
+                    var json;
+                    try {
+                      json = JSON.stringify(data);
+                      if (!json.hasOwnProperty('_id')) {
+                        json = '{' + '"_id": 1,' + json.substr(1);
+                        fs.writeFile('flights/' + file, json, function (err) {
+                          if (err) throw err;
+                          console.log('It\'s saved');
+                        });
+                      }
+                    } catch(e) {
+                      done(e, null);
+                    }
+                }
+
+                async.waterfall([
+                  function(callback) {
+                    fs.readFile('flights/' + file, callback);
+                  },
+                  processFile
+                ], function(error, result) {
+                  if (error) {
+                    done(error);
+                  } else {
+                    console.log('file processed');
+                    done();
+                  }
+                });
+              }
+
+              var files = fs.readdirSync('flights');
+
+              async.each(files, syncFile, function(err) {
+                if (err) {
+                  console.log(err);
+                } else {
+                  console.log('success!');
+                }
+              })
+            };
+
+            // test the sync
+            $scope.sync();
+
           }
         })
       ;
@@ -1114,6 +1191,7 @@ console.log(client);
             }
           });
       };
+
     })
     .controller('ConnectCtrl', function($scope, $modalInstance) {
       $scope.ok = function (form) {
