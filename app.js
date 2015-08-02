@@ -5,6 +5,8 @@
   // System Code
   var http = require('http');
 
+  var async = require('async');
+
   var drone = require('ar-drone');
   var Parser = require('./node_modules/ar-drone/lib/video/PaVEParser.js');
   var parser = new Parser();
@@ -12,7 +14,7 @@
   var client = drone.createClient();
   var tcpVideoStream = client.getVideoStream();
   // var output = require('fs').createWriteStream('./vid.mp4');
-  client.config('video:video_channel', 3);
+  client.config('video:video_channel', 0);
 
 var fpvObject;
 
@@ -1072,6 +1074,56 @@ console.log(client);
 
     })
     .controller('ForgeCtrl', function($scope) {
+
+      var fs = require('fs');
+
+      $scope.serializeFlights = function() {
+
+      };
+
+      $scope.sync = function() {
+        function syncFile(file, done) {
+
+          function processFile(data, done) {
+              var json;
+              try {
+                json = JSON.stringify(data);
+                if (!json.hasOwnProperty('_id')) {
+                  console.log('TODO [POST] /api/flight/');
+                }
+              } catch(e) {
+                done(e, null);
+              }
+          }
+
+          async.waterfall([
+            function(callback) {
+              fs.readFile('flights/' + file, callback);
+            },
+            processFile
+          ], function(error, result) {
+            if (error) {
+              done(error);
+            } else {
+              console.log('file processed');
+              done();
+            }
+          });
+        }
+
+        var files = fs.readdirSync('flights');
+
+        async.each(files, syncFile, function(err) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('success!');
+          }
+        })
+      };
+
+      // test the sync
+      $scope.sync();
 
     })
     .controller('ConnectCtrl', function($scope, $modalInstance) {
