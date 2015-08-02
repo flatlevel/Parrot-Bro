@@ -13,7 +13,7 @@
     "icon": "",
     "toolbar": true,
     "frame": true,
-    "min_width": 960,
+    "min_width": 400,
     "min_height": 520,
     "resizable": true,
     "show": true,

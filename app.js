@@ -1,3 +1,4 @@
+
 (function() {
 'use strict';
 
@@ -11,7 +12,7 @@
   var client = drone.createClient();
   var tcpVideoStream = client.getVideoStream();
   // var output = require('fs').createWriteStream('./vid.mp4');
-  client.config('video:video_channel', 0);
+  client.config('video:video_channel', 3);
 
 var fpvObject;
 
@@ -760,21 +761,42 @@ console.log(client);
 
       var chartEntry = [];
 
+
       // Realtime Line
       $scope.realtimeLine = liveLineData.history(0);
       // console.log($scope.realtimeLine);
       $scope.realtimeLineFeed = liveLineData.next(0);
 
+
+      // optical drift canvas render.
+      // Still trying to do research about useable libraries here.
+      // Processingjs doesn't seem to work, so we may need to hack it.
+      // I personally think Processingjs should be apart of the app.
+      var view = document.getElementById('opticalDrift');
+      var ctx = view.getContext('2d');
+      $scope.driftX = 200; $scope.driftY = 200;
+      ctx.fillStyle = "#CCCCCC";
+      ctx.fillRect(0,0,400,400);
+      ctx.lineWidth = 2;
+      ctx.moveTo($scope.driftX, $scope.driftY);
+
       client.on('navdata', function(data) {
         $scope.telemetry = data;
         if (data && data.demo && data.droneState.flying) {
+          $scope.driftX = 200 + Math.ceil(data.demo.drone.camera.translation.x / 10);
+          $scope.driftY = 200 + Math.ceil(data.demo.drone.camera.translation.y / 10);
+          if ($scope.driftX < 400 || $scope.driftX > 0 || $scope.driftY < 400 || $scope.driftY > 0) {
+            ctx.lineTo($scope.driftX,$scope.driftY);
+          }
+          ctx.stroke();
           switch ($scope.graphSelect) {
             case 'drift':  $scope.realtimeLineFeed = liveLineData.next(
               Math.sqrt(
-                  data.demo.detection.camera.translation.x*data.demo.detection.camera.translation.x
-                  + data.demo.detection.camera.translation.y*data.demo.detection.camera.translation.y
-                  + data.demo.detection.camera.translation.z*data.demo.detection.camera.translation.z
-                )); break;
+                  data.demo.drone.camera.translation.x*data.demo.drone.camera.translation.x
+                  + data.demo.drone.camera.translation.y*data.demo.drone.camera.translation.y
+                  + data.demo.drone.camera.translation.z*data.demo.drone.camera.translation.z
+                ));
+                 break;
             case 'altitude': $scope.realtimeLineFeed = liveLineData.next(data.demo.altitude); break;
             case 'yaw': $scope.realtimeLineFeed = liveLineData.next(data.demo.yaw); break;
             case 'pitch': $scope.realtimeLineFeed = liveLineData.next(data.demo.pitch); break;
