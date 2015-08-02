@@ -245,7 +245,7 @@ console.log(client);
     })
     .factory('Session',
       function($resource) {
-        return $resource('http://localhost:4000/api/session', {}, 
+        return $resource('http://localhost:4000/api/session', {},
         {
           sync: {
             method: 'PUT'
@@ -1094,12 +1094,12 @@ console.log(client);
       $scope.loginInfo = {};
 
       onlineStatus.isOnLine = $window.navigator.onLine;
-      
+
       // it's not neccessary, it can be removed
       onlineStatus.onLine = function() {
         return onlineStatus.isOnLine;
       }
-      if (onlineStatus.isOnLine) 
+      if (onlineStatus.isOnLine)
         $scope.online = true;
       else
         $scope.online = false;
@@ -1178,6 +1178,8 @@ console.log(client);
             $scope.sync();
 
           }
+        }, function(error) {
+          $state.go('login');
         })
       ;
 
