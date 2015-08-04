@@ -232,13 +232,29 @@ console.log(client);
           templateUrl:    'views/code.html',
           controller:     'CodeCtrl'
         })
-        .state('forge', {
+        .state('login', {
           url:            '/',
+          templateUrl:    'views/forge-login.html',
+          controller:     'LoginCtrl'
+        })
+        .state('forge', {
           templateUrl:    'views/forge.html',
           controller:     'ForgeCtrl'
         })
       ;
     })
+    .factory('Session',
+      function($resource) {
+        return $resource('http://stage.dronesmith.io/api/session', {},
+        {
+          sync: {
+            method: 'PUT'
+          },
+          authenticate: {
+            method: 'POST'
+          }
+        });
+    })    // Want this to be a service so the mission data can be preserved.
     .factory('FlightSaver', function() {
       var firstEvent = false;
       var activeFd = null;
@@ -819,6 +835,26 @@ console.log(client);
         client.disableEmergency();
       }
 
+      $scope.MoveForward = function(amt) {
+        client.front(amt);
+        if ($scope.telemetry.droneState.flying) {
+          $scope.inMotion = true;
+          $timeout(function() {
+            $scope.Stop();
+          }, 1000);
+        }
+      }
+
+      $scope.MoveBack = function(amt) {
+        client.back(amt);
+        if ($scope.telemetry.droneState.flying) {
+          $scope.inMotion = true;
+          $timeout(function() {
+            $scope.Stop();
+          }, 1000);
+        }
+      }
+
 
       $scope.MoveUp = function(amt) {
         client.up(amt);
@@ -1073,23 +1109,69 @@ console.log(client);
       //   });
 
     })
-    .controller('ForgeCtrl', function($scope) {
+    .controller('LoginCtrl', function($scope, $http, $window, $state, Session) {
+      var onlineStatus = {};
+      $scope.loginInfo = {};
 
+      onlineStatus.isOnLine = $window.navigator.onLine;
+
+      // it's not neccessary, it can be removed
+      onlineStatus.onLine = function() {
+        return onlineStatus.isOnLine;
+      }
+      if (onlineStatus.isOnLine)
+        $scope.online = true;
+      else
+        $scope.online = false;
+
+      $scope.login = function() {
+        Session
+          .authenticate($scope.loginInfo)
+          .$promise
+          .then(function(data) {
+            $state.go('forge');
+          })
+        ;
+      }
+    })
+    .controller ('ForgeCtrl', function($scope, $state, Session, $http) {
       var fs = require('fs');
+      $scope.userInfo = null;
 
-      $scope.serializeFlights = function() {
 
-      };
 
+      //
+      // Syncing algo
+      // TODO add memory limit
+      // TODO webworkers
+      //
       $scope.sync = function() {
         function syncFile(file, done) {
 
           function processFile(data, done) {
               var json;
               try {
-                json = JSON.stringify(data);
+                json = JSON.parse(data);
                 if (!json.hasOwnProperty('_id')) {
-                  console.log('TODO [POST] /api/flight/');
+
+                  $http
+                    .post('http://stage.dronesmith.io/api/flight/' + $scope.userInfo._id, json)
+                    .success(function(data) {
+                      console.log(data);
+                      json._id = data.flight;
+                      fs.writeFile('flights/' + file, JSON.stringify(json), function(err) {
+                        if (err) {
+                          done(err);
+                        } else {
+                          done(null);
+                        }
+                      });
+                    })
+                    .error(function(data) {
+                      console.log('Error');
+                      done(data);
+                    })
+                  ;
                 }
               } catch(e) {
                 done(e, null);
@@ -1112,6 +1194,12 @@ console.log(client);
         }
 
         var files = fs.readdirSync('flights');
+        // OSX has a mental disability.
+        var badfile = files.indexOf('.DS_Store');
+
+        if (badfile > -1) {
+          files.splice(badfile, 1);
+        }
 
         async.each(files, syncFile, function(err) {
           if (err) {
@@ -1122,8 +1210,34 @@ console.log(client);
         })
       };
 
-      // test the sync
-      $scope.sync();
+      Session
+        .get({}, function(data) {
+          $scope.userInfo = data.userData || null;
+          if (!$scope.userInfo) {
+            $state.go('login');
+          }
+          else {
+
+            $scope.status = "Syncing flights...";
+            // test the sync
+            $scope.sync();
+
+          }
+        }, function(error) {
+          $state.go('login');
+        })
+      ;
+
+      $scope.logout = function() {
+        Session
+          .authenticate({deauth: true})
+          .$promise
+          .then(function(data) {
+            if (!data.userData) {
+              $state.go('login');
+            }
+          });
+      };
 
     })
     .controller('ConnectCtrl', function($scope, $modalInstance) {

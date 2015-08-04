@@ -11,10 +11,12 @@
   "window": {
     "title": "Parrot Bro",
     "icon": "",
-    "toolbar": true,
+    "toolbar": false,
     "frame": true,
     "min_width": 400,
     "min_height": 520,
+    "width:": 900,
+    "height": 520,
     "resizable": true,
     "show": true,
     "position": "center"

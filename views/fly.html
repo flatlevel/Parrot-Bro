@@ -47,6 +47,12 @@
           <button class="btn btn-default" ng-click="MoveRight(currentMove)" aria-label="Fly Right">
             <span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>
           </button>
+          <button class="btn btn-default" ng-click="MoveForward(currentMove)" aria-label="Fly Forward">
+            FWD
+          </button>
+          <button class="btn btn-default" ng-click="MoveBack(currentMove)" aria-label="Fly Backward">
+            BWD
+          </button>
 
           <input class="form-control" type="number" min="0" max="1" step=".1" ng-model="currentMove">
           <hr>
