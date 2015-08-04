@@ -835,6 +835,26 @@ console.log(client);
         client.disableEmergency();
       }
 
+      $scope.MoveForward = function(amt) {
+        client.front(amt);
+        if ($scope.telemetry.droneState.flying) {
+          $scope.inMotion = true;
+          $timeout(function() {
+            $scope.Stop();
+          }, 1000);
+        }
+      }
+
+      $scope.MoveBack = function(amt) {
+        client.back(amt);
+        if ($scope.telemetry.droneState.flying) {
+          $scope.inMotion = true;
+          $timeout(function() {
+            $scope.Stop();
+          }, 1000);
+        }
+      }
+
 
       $scope.MoveUp = function(amt) {
         client.up(amt);
@@ -1118,8 +1138,12 @@ console.log(client);
       var fs = require('fs');
       $scope.userInfo = null;
 
+
+
       //
       // Syncing algo
+      // TODO add memory limit
+      // TODO webworkers
       //
       $scope.sync = function() {
         function syncFile(file, done) {
