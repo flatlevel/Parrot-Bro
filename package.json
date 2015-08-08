@@ -11,7 +11,7 @@
   "window": {
     "title": "Parrot Bro",
     "icon": "",
-    "toolbar": false,
+    "toolbar": true,
     "frame": true,
     "min_width": 400,
     "min_height": 520,

@@ -213,7 +213,8 @@ console.log(client);
       'ngDragDrop',
       'ngWebSocket',
       'ng.epoch',
-      'ui.ace'
+      'ui.ace',
+      'chart.js'
     ])
     .config(function($stateProvider) {
       $stateProvider
@@ -1134,7 +1135,7 @@ console.log(client);
         ;
       }
     })
-    .controller ('ForgeCtrl', function($scope, $state, Session, $http) {
+    .controller ('ForgeCtrl', function($scope, $state, Session, $http, $timeout) {
       var fs = require('fs');
       $scope.userInfo = null;
 
@@ -1221,12 +1222,42 @@ console.log(client);
             $scope.status = "Syncing flights...";
             // test the sync
             $scope.sync();
+            $scope.flightLogs = [];
+            $scope.data = [[]];
+            $scope.labels = [];
+            $scope.selectedFlight = $scope.flightLogs[0];
+            $scope.series = ['altitude'];
+            $scope.chartOptions = {
+              'pointDot': false,
+              'scaleShowVerticalLines': false,
+              'datasetStroke': false,
+            };
 
+            $http
+              .get("http://stage.dronesmith.io/api/flight/" + $scope.userInfo._id)
+              .then(function(success) {
+                var data = success.data;
+
+                angular.forEach(data, function (stats) {
+                  $scope.flightLogs.push(stats.start);
+                });
+
+                angular.forEach(data[0].flight, function (stats) {
+                  if (stats.data.hasOwnProperty('demo')) {
+                    $scope.data[0].push(stats.data.demo.altitude);
+                    $scope.labels.push(stats.at);
+                  }
+                });
+
+                console.log(data);
+              
+              }, function(error) {
+                console.log(error);
+            });
           }
         }, function(error) {
           $state.go('login');
-        })
-      ;
+        });
 
       $scope.logout = function() {
         Session
@@ -1238,7 +1269,6 @@ console.log(client);
             }
           });
       };
-
     })
     .controller('ConnectCtrl', function($scope, $modalInstance) {
       $scope.ok = function (form) {

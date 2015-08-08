@@ -5,8 +5,11 @@
       <p class="text-right" ng-show="userInfo">Loaded Forge Profile {{userInfo.email}}.</p>
       <select class="form-control"
         ng-model="selectedFlight"
-        ng-options="flight for flight in getFlights()">
+        ng-options="flight for flight in flightLogs">
       </select>
+      <canvas id="line" class="chart chart-line" data="data"
+  labels="labels" legend="true" series="series" options="chartOptions">
+      </canvas>
       <button class="btn btn-primary" ng-click="logout()">Log out</button>
     </div>
     <div class="col-sm-2"></div>
