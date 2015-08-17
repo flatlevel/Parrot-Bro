@@ -1260,7 +1260,9 @@ console.log(client);
                   }
                 });
                 
-                tenLabel = Math.round(count / 8);
+                tenLabel = Math.floor(count / 8);
+
+                console.log(count)
 
                 $scope.data[0].push(tempData[0])
                 $scope.labels.push(tempLabel[0])
@@ -1272,6 +1274,8 @@ console.log(client);
 
                 $scope.data[0].push(tempData[count-1]);
                 $scope.labels.push(tempLabel[count-1]);
+
+                console.log(data);
               
               }, function(error) {
                 console.log(error);
