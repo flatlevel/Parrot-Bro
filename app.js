@@ -1222,10 +1222,11 @@ console.log(client);
             $scope.status = "Syncing flights...";
             // test the sync
             $scope.sync();
+
+            // chart
             $scope.flightLogs = [];
             $scope.data = [[]];
             $scope.labels = [];
-            $scope.selectedFlight = $scope.flightLogs[0];
             $scope.series = ['altitude'];
             $scope.chartOptions = {
               'pointDot': false,
@@ -1237,19 +1238,40 @@ console.log(client);
               .get("http://stage.dronesmith.io/api/flight/" + $scope.userInfo._id)
               .then(function(success) {
                 var data = success.data;
+                var count = 0, tenLabel = 0;
+                var tempData = [];
+                var tempLabel = [];
 
+                // select the file by file start date
                 angular.forEach(data, function (stats) {
                   $scope.flightLogs.push(stats.start);
                 });
 
+                $scope.selectedFlight = $scope.flightLogs[0];
+
+                // to get 10 sets of stats, need a better way to code this
+                // because there are 260 data for just 16 second
+                // there are too much data for a chart
                 angular.forEach(data[0].flight, function (stats) {
                   if (stats.data.hasOwnProperty('demo')) {
-                    $scope.data[0].push(stats.data.demo.altitude);
-                    $scope.labels.push(stats.at);
+                    count++;
+                    tempData.push(stats.data.demo.altitude);
+                    tempLabel.push(stats.at);
                   }
                 });
+                
+                tenLabel = Math.round(count / 8);
 
-                console.log(data);
+                $scope.data[0].push(tempData[0])
+                $scope.labels.push(tempLabel[0])
+
+                for (var i = 1; i < 9; i ++) {
+                  $scope.data[0].push(tempData[tenLabel * i]);
+                  $scope.labels.push(tempLabel[tenLabel * i]);
+                }
+
+                $scope.data[0].push(tempData[count-1]);
+                $scope.labels.push(tempLabel[count-1]);
               
               }, function(error) {
                 console.log(error);
