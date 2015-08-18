@@ -5,11 +5,14 @@
       <p class="text-right" ng-show="userInfo">Loaded Forge Profile {{userInfo.email}}.</p>
       <select class="form-control"
         ng-model="selectedFlight"
-        ng-options="flight for flight in flightLogs">
+        ng-options="flight.start for flight in flightLogs">
       </select>
-      <canvas id="line" class="chart chart-line" data="data"
-  labels="labels" legend="true" series="series" options="chartOptions">
-      </canvas>
+      <div>
+        <canvas ng-if="selectedFlight.altitude.hasData" id="line" class="chart chart-line" data="selectedFlight.altitude.dataBy10"
+  labels="selectedFlight.altitude.timestampBy10" legend="true" series="series" options="chartOptions">
+        </canvas>
+        <span ng-if="!selectedFlight.altitude.hasData"> No data for this record </span>
+      </div>
       <button class="btn btn-primary" ng-click="logout()">Log out</button>
     </div>
     <div class="col-sm-2"></div>

@@ -1237,45 +1237,61 @@ console.log(client);
             $http
               .get("http://stage.dronesmith.io/api/flight/" + $scope.userInfo._id)
               .then(function(success) {
-                var data = success.data;
-                var count = 0, tenLabel = 0;
+                $scope.flightLogs = success.data;
                 var tempData = [];
                 var tempLabel = [];
 
-                // select the file by file start date
-                angular.forEach(data, function (stats) {
-                  $scope.flightLogs.push(stats.start);
-                });
+                //  in order to use the chart library, we need to reformat the data
+                //  however, it will slow down the loading speed
+                //  To do: 
+                //        the files in forge should be already reformated, 
+                //        reformat the data from server side right after the file is uploading.  
+                //        also, the time need to be convert to int, then we can display the data per second
+                angular.forEach($scope.flightLogs, function (stats) {
+                  stats.altitude = {
+                    timestamp: [],
+                    data: [[]],
+                    count: 0,
+                    hasData: true,
+                    dataBy10: [[]],
+                    timestampBy10: []
+                  }
 
-                $scope.selectedFlight = $scope.flightLogs[0];
+                  var altitude = stats.altitude;
 
-                // to get 10 sets of stats, need a better way to code this
-                // because there are 260 data for just 16 second
-                // there are too much data for a chart
-                angular.forEach(data[0].flight, function (stats) {
-                  if (stats.data.hasOwnProperty('demo')) {
-                    count++;
-                    tempData.push(stats.data.demo.altitude);
-                    tempLabel.push(stats.at);
+                  angular.forEach(stats.flight, function (flightRecord) {
+                    if (flightRecord.data.hasOwnProperty('demo')) {
+                      altitude.count++;
+                      altitude.data[0].push(flightRecord.data.demo.altitude);
+                      altitude.timestamp.push(flightRecord.at);
+                    }
+                  });
+
+                  if (altitude.count == 0) {
+                    stats.altitude.hasData = false
+                  }
+
+                  // divide the data into 10
+                  var baseNum = 0;
+
+                  if (altitude.count > 10) {
+                    baseNum = Math.floor(altitude.count / 8);
+
+                    altitude.dataBy10[0].push(altitude.data[0][0])
+                    altitude.timestampBy10.push(altitude.timestamp[0])
+
+                    for (var i = 1; i < 9; i ++) {
+                      altitude.dataBy10[0].push(altitude.data[0][baseNum * i]);
+                      altitude.timestampBy10.push(altitude.timestamp[baseNum * i]);
+                    }
+
+                    altitude.dataBy10[0].push(altitude.data[0][altitude.count - 1]);
+                    altitude.timestampBy10.push(altitude.timestamp[altitude.count - 1]);
                   }
                 });
-                
-                tenLabel = Math.floor(count / 8);
 
-                console.log(count)
 
-                $scope.data[0].push(tempData[0])
-                $scope.labels.push(tempLabel[0])
-
-                for (var i = 1; i < 9; i ++) {
-                  $scope.data[0].push(tempData[tenLabel * i]);
-                  $scope.labels.push(tempLabel[tenLabel * i]);
-                }
-
-                $scope.data[0].push(tempData[count-1]);
-                $scope.labels.push(tempLabel[count-1]);
-
-                console.log(data);
+                $scope.selectedFlight = $scope.flightLogs[0];
               
               }, function(error) {
                 console.log(error);
