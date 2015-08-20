@@ -1211,6 +1211,66 @@ console.log(client);
         })
       };
 
+      function createChart (files, dataName) {
+        angular.forEach(files, function (stats) {
+          stats.DATA[dataName] = {};
+          stats.DATA[dataName].chartObject = {
+            "data": {
+              "cols":[{"label": "Timestamp","type": "string"},{"label": '"' + dataName + '"',"type": "number"}], 
+              "rows":[{"c": []}]
+            },
+            "display": true,
+            "options": {
+              "title": '"' + dataName + '"',
+              "displayExactValues": true,
+              "vAxis": {
+                "title": "Meter",
+                "gridlines": {
+                  "count": 10
+                }
+              },
+              "hAxis": {
+                "title": "timestamp"
+              }
+            },
+            "type": "LineChart"
+          };
+
+          var index = 0;
+
+          angular.forEach(stats.flight, function (flightRecord) {
+            if (flightRecord.data.hasOwnProperty('demo')) {
+              switch (dataName) {
+                case "altitude":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.altitude});
+                  index++;
+                  break;
+                case "pitch":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.rotation.pitch});
+                  index++;
+                  break;
+                case "roll":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.rotation.roll});
+                  index++;
+                  break;
+                case "yaw":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.rotation.yaw});
+                  index++;
+                  break;
+              }
+            }
+          });
+        });
+      }
+
       Session
         .get({}, function(data) {
           $scope.userInfo = data.userData || null;
@@ -1223,6 +1283,14 @@ console.log(client);
             // test the sync
             $scope.sync();
 
+            // options to show what kind of stat
+            $scope.showOptions = [
+              {name: "altitude", show: true},
+              {name: "yaw", show: true},
+              {name: "pitch", show: true},
+              {name: "roll", show: true}
+            ];
+
             // chart      
             $scope.flightLogs = [];
 
@@ -1231,43 +1299,21 @@ console.log(client);
               .then(function(success) {
                 $scope.flightLogs = success.data;
 
-                angular.forEach($scope.flightLogs, function (stats) {
+                angular.forEach($scope.flightLogs, function (file) {
+                  file.DATA = {};
+                })
 
-                  stats.chartObject = {
-                    "data": {
-                      "cols":[{"label": "Timestamp","type": "string"},{"label": "Altitude","type": "number"}], 
-                      "rows":[{"c": []}]
-                    },
-                    "display": true,
-                    "options": {
-                      "title": "Altitude",
-                      "displayExactValues": true,
-                      "vAxis": {
-                        "title": "Meter",
-                        "gridlines": {
-                          "count": 10
-                        }
-                      },
-                      "hAxis": {
-                        "title": "timestamp"
-                      }
-                    },
-                    "type": "LineChart"
-                  };
-
-                  var index = 0;
-
-                  angular.forEach(stats.flight, function (flightRecord) {
-                    if (flightRecord.data.hasOwnProperty('demo')) {
-                      stats.chartObject.data.rows.push({"c": []});
-                      stats.chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
-                      stats.chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.altitude});
-                      index++;
-                    }
-                  });
-                });
+                angular.forEach($scope.showOptions, function (option) {
+                  createChart($scope.flightLogs, option.name);
+                })
 
                 $scope.selectedFlight = $scope.flightLogs[0];
+
+                $scope.showChart = function (dataName) {
+                  return $scope.selectedFlight.DATA[dataName].chartObject;
+                }
+
+                console.log($scope.flightLogs)
               
               }, function(error) {
                 console.log(error);

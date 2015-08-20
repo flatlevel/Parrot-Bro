@@ -1,14 +1,24 @@
-<secton id="forgeView">
+<secton id="forgeView" class="container-fluid">
   <div class="row">
-    <div class="col-sm-2"></div>
+    <div class="col-sm-2">
+      <div class="checkbox" ng-repeat="option in showOptions">
+        <label>
+          <input type="checkbox" ng-model="option.show">{{option.name}}
+        </label>
+      </div>
+    </div>
     <div class="col-sm-8">
       <p class="text-right" ng-show="userInfo">Loaded Forge Profile {{userInfo.email}}.</p>
       <select class="form-control"
         ng-model="selectedFlight"
         ng-options="flight.start for flight in flightLogs">
       </select>
-      <div google-chart chart="selectedFlight.chartObject" style="height: 600px"></div>
-      <button class="btn btn-primary" ng-click="logout()">Log out</button>
+      <div ng-repeat="option in showOptions" ng-show="option.show">
+        <div google-chart chart="showChart(option.name)" style="height: 600px"></div>  
+      </div>
+      <button class="btn btn-primary" ng-click="logout()">
+        Log out
+      </button>
     </div>
     <div class="col-sm-2"></div>
   </div>
