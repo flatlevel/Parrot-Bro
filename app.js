@@ -214,7 +214,7 @@ console.log(client);
       'ngWebSocket',
       'ng.epoch',
       'ui.ace',
-      'chart.js'
+      'googlechart'
     ])
     .config(function($stateProvider) {
       $stateProvider
@@ -1223,73 +1223,49 @@ console.log(client);
             // test the sync
             $scope.sync();
 
-            // chart
+            // chart      
             $scope.flightLogs = [];
-            $scope.data = [[]];
-            $scope.labels = [];
-            $scope.series = ['altitude'];
-            $scope.chartOptions = {
-              'pointDot': false,
-              'scaleShowVerticalLines': false,
-              'datasetStroke': false,
-            };
 
             $http
               .get("http://stage.dronesmith.io/api/flight/" + $scope.userInfo._id)
               .then(function(success) {
                 $scope.flightLogs = success.data;
-                var tempData = [];
-                var tempLabel = [];
 
-                //  in order to use the chart library, we need to reformat the data
-                //  however, it will slow down the loading speed
-                //  To do: 
-                //        the files in forge should be already reformated, 
-                //        reformat the data from server side right after the file is uploading.  
-                //        also, the time need to be convert to int, then we can display the data per second
                 angular.forEach($scope.flightLogs, function (stats) {
-                  stats.altitude = {
-                    timestamp: [],
-                    data: [[]],
-                    count: 0,
-                    hasData: true,
-                    dataBy10: [[]],
-                    timestampBy10: []
-                  }
 
-                  var altitude = stats.altitude;
+                  stats.chartObject = {
+                    "data": {
+                      "cols":[{"label": "Timestamp","type": "string"},{"label": "Altitude","type": "number"}], 
+                      "rows":[{"c": []}]
+                    },
+                    "display": true,
+                    "options": {
+                      "title": "Altitude",
+                      "displayExactValues": true,
+                      "vAxis": {
+                        "title": "Meter",
+                        "gridlines": {
+                          "count": 10
+                        }
+                      },
+                      "hAxis": {
+                        "title": "timestamp"
+                      }
+                    },
+                    "type": "LineChart"
+                  };
+
+                  var index = 0;
 
                   angular.forEach(stats.flight, function (flightRecord) {
                     if (flightRecord.data.hasOwnProperty('demo')) {
-                      altitude.count++;
-                      altitude.data[0].push(flightRecord.data.demo.altitude);
-                      altitude.timestamp.push(flightRecord.at);
+                      stats.chartObject.data.rows.push({"c": []});
+                      stats.chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
+                      stats.chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.altitude});
+                      index++;
                     }
                   });
-
-                  if (altitude.count == 0) {
-                    stats.altitude.hasData = false
-                  }
-
-                  // divide the data into 10
-                  var baseNum = 0;
-
-                  if (altitude.count > 10) {
-                    baseNum = Math.floor(altitude.count / 8);
-
-                    altitude.dataBy10[0].push(altitude.data[0][0])
-                    altitude.timestampBy10.push(altitude.timestamp[0])
-
-                    for (var i = 1; i < 9; i ++) {
-                      altitude.dataBy10[0].push(altitude.data[0][baseNum * i]);
-                      altitude.timestampBy10.push(altitude.timestamp[baseNum * i]);
-                    }
-
-                    altitude.dataBy10[0].push(altitude.data[0][altitude.count - 1]);
-                    altitude.timestampBy10.push(altitude.timestamp[altitude.count - 1]);
-                  }
                 });
-
 
                 $scope.selectedFlight = $scope.flightLogs[0];
               

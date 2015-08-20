@@ -7,12 +7,7 @@
         ng-model="selectedFlight"
         ng-options="flight.start for flight in flightLogs">
       </select>
-      <div>
-        <canvas ng-if="selectedFlight.altitude.hasData" id="line" class="chart chart-line" data="selectedFlight.altitude.dataBy10"
-  labels="selectedFlight.altitude.timestampBy10" legend="true" series="series" options="chartOptions">
-        </canvas>
-        <span ng-if="!selectedFlight.altitude.hasData"> No data for this record </span>
-      </div>
+      <div google-chart chart="selectedFlight.chartObject" style="height: 600px"></div>
       <button class="btn btn-primary" ng-click="logout()">Log out</button>
     </div>
     <div class="col-sm-2"></div>
