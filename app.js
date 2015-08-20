@@ -373,7 +373,8 @@ console.log(client);
         ok: false,
         currentMission: NaN,
         error: null,
-        statusText: null
+        statusText: null,
+        length: 0
       };
 
       function move(array, old_index, new_index) {
@@ -412,6 +413,8 @@ console.log(client);
           compiledMission.emt = EMT_TAKEOFFDEFAULT;
           compiledMission.ok = false;
           compiledMission.nodeAdded = false;
+          compiledMission.errors = false;
+          compiledMission.length = missionData.length;
 
           compiledMission.progress = [
             {
@@ -435,11 +438,13 @@ console.log(client);
           angular.forEach(missionData, function(data) {
             switch (data.kind) {
               case 'primary':
-                if (data.duration < 100 || data.duration > 100000) {
+                if (data.duration < 100 || data.duration > 100000 || data.duration == undefined) {
                   compiledMission.error = "Out of Range: " + data.duration;
+                  compiledMission.errors = true;
                   return;
                 } else if (!data.commandSelect) {
                   compiledMission.error = "Undefined Command";
+                  compiledMission.errors = true;
                   return;
                 } else {
                   compiledMission.emt += data.duration;
@@ -448,14 +453,17 @@ console.log(client);
                 }
                 break;
               case 'move':
-                if (data.duration < 100 || data.duration > 100000) {
+                if (data.duration < 100 || data.duration > 100000 || data.duration == undefined) {
                   compiledMission.error = "Out of Range: " + data.duration;
+                  compiledMission.errors = true;
                   return;
                 } else if (!data.commandSelect) {
                   compiledMission.error = "Undefined Command";
+                  compiledMission.errors = true;
                   return;
-                } else if (data.amount < 0 || data.amount > 1) {
+                } else if (data.amount < 0 || data.amount > 1 || data.amount == undefined) {
                   compiledMission.error = "Out of Range: " + data.amount;
+                  compiledMission.errors = true;
                   return;
                 } else {
                   compiledMission.emt += data.duration;
@@ -464,11 +472,13 @@ console.log(client);
                 }
                 break;
               case 'maneuver':
-                if (data.duration < 100 || data.duration > 100000) {
+                if (data.duration < 100 || data.duration > 100000 || data.duration == undefined) {
                   compiledMission.error = "Out of Range: " + data.duration;
+                  compiledMission.errors = true;
                   return;
                 } else if (!data.commandSelect) {
                   compiledMission.error = "Undefined Command";
+                  compiledMission.errors = true;
                   return;
                 } else {
                   compiledMission.emt += data.duration;
@@ -477,44 +487,51 @@ console.log(client);
                 }
                 break;
               case 'leds':
-                if (data.duration < 1 || data.duration > 100) {
+                if (data.seconds < 1 || data.seconds > 100 || data.seconds == undefined) {
                   compiledMission.error = "Out of Range: " + data.seconds;
+                  compiledMission.errors = true;
                   return;
                 } else if (!data.commandSelect) {
                   compiledMission.error = "Undefined Command";
+                  compiledMission.errors = true;
                   return;
-                } else if (data.freq < 0 || data.freq > 60) {
+                } else if (data.freq < 0 || data.freq > 60 || data.freq == undefined) {
                   compiledMission.error = "Out of Range: " + data.freq;
+                  compiledMission.errors = true;
                   return;
                 } else {
                   //adds correct duration for leds
-                  compiledMission.emt += data.seconds;
-                  compiledMission.progress[3].value += 100;
+                  compiledMission.emt += (data.seconds * 1000);
+                  compiledMission.progress[3].value += (data.seconds * 1000);
                   compiledMission.nodeAdded = true;
                 }
                 break;
               default:
                 compiledMission.error = "Unknown type: " + data.kind;
+                compiledMission.errors = true;
                 return;
             }
           });
 
-          // calculate progressbar, currently wrong
-          compiledMission.progress[0].value += 10000;
-          angular.forEach(compiledMission.progress, function(bar) {
-            bar.percent = Math.round((bar.value / compiledMission.emt) * 100);
-          });
-          if (compiledMission.nodeAdded)
+          if (compiledMission.nodeAdded){
+            //only sets if at least one new node added
             compiledMission.ok = true;
-        },
+            //calculate progress bar
+            compiledMission.progress[0].value += 5000;
+            angular.forEach(compiledMission.progress, function(bar) {
+              bar.percent = Math.round((bar.value / compiledMission.emt) * 100);
+            });
+        }},
+
         runMission: function() {
-          if (!compiledMission.ok && compiledMission.nodeAdded) {
-            compiledMission.error = "Mission not compiled properly!";
+          //errors in input
+          if (compiledMission.errors) {
+            compiledMission.statusText = "Mission not compiled properly!";
             return;
           }
-          //lets you know you didn't make plan a mission
-          if (!compiledMission.ok && !compiledMission.nodeAdded) {
-            compiledMission.error = "No mission planned!";
+          //no new nodes added, will only get here if no errrors
+          if (!compiledMission.nodeAdded) {
+            compiledMission.statusText = "No mission planned!";
             return;
           }
 
@@ -1318,7 +1335,7 @@ console.log(client);
           $scope.blockName = 'Glow Node';
           nodeInfo = {
             kind: 'leds',
-            seconds: 2000,
+            seconds: 2,
             commandSelect: 'fire',
             freq: 5
           };
