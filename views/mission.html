@@ -274,7 +274,8 @@
            Mission Control
         </div>
         <div class="panel panel-body" id="missionBlocks">
-          <p ng-show="missionStatus.emt">Mission Time Remaining: {{missionStatus.emt / 1000}} seconds</p>
+          <!-- Changed from Mission Time Remaining until update problem can be addressed -->
+          <p ng-show="missionStatus.emt">Total Mission Time: {{missionStatus.emt / 1000}} seconds</p>
           <p ng-show="missionStatus.error">{{missionStatus.error}}</p>
           <p ng-show="missionStatus.ok">Current Node: {{missionStatus.currentMission}}</p>
           <p ng-show="missionStatus.statusText">Mission Status: {{missionStatus.statusText}}</p>

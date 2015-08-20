@@ -365,7 +365,7 @@ console.log(client);
     // Want this to be a service so the mission data can be preserved.
     .factory('MissionPlayer', function($timeout, FlightSaver, VideoPlayer) {
       var missionData = [];
-      var EMT_TAKEOFFDEFAULT = 10000;
+      var EMT_TAKEOFFDEFAULT = 5000;
       var isInMission = false;
 
       var compiledMission = {
@@ -411,6 +411,7 @@ console.log(client);
         compileMission: function() {
           compiledMission.emt = EMT_TAKEOFFDEFAULT;
           compiledMission.ok = false;
+          compiledMission.nodeAdded = false;
 
           compiledMission.progress = [
             {
@@ -443,6 +444,7 @@ console.log(client);
                 } else {
                   compiledMission.emt += data.duration;
                   compiledMission.progress[0].value += data.duration;
+                  compiledMission.nodeAdded = true;
                 }
                 break;
               case 'move':
@@ -458,6 +460,7 @@ console.log(client);
                 } else {
                   compiledMission.emt += data.duration;
                   compiledMission.progress[1].value += data.duration;
+                  compiledMission.nodeAdded = true;
                 }
                 break;
               case 'maneuver':
@@ -470,6 +473,7 @@ console.log(client);
                 } else {
                   compiledMission.emt += data.duration;
                   compiledMission.progress[2].value += data.duration;
+                  compiledMission.nodeAdded = true;
                 }
                 break;
               case 'leds':
@@ -483,8 +487,10 @@ console.log(client);
                   compiledMission.error = "Out of Range: " + data.freq;
                   return;
                 } else {
-                  compiledMission.emt += 100;
+                  //adds correct duration for leds
+                  compiledMission.emt += data.seconds;
                   compiledMission.progress[3].value += 100;
+                  compiledMission.nodeAdded = true;
                 }
                 break;
               default:
@@ -493,17 +499,22 @@ console.log(client);
             }
           });
 
-          // calculate progressbar
+          // calculate progressbar, currently wrong
           compiledMission.progress[0].value += 10000;
           angular.forEach(compiledMission.progress, function(bar) {
             bar.percent = Math.round((bar.value / compiledMission.emt) * 100);
           });
-
-          compiledMission.ok = true;
+          if (compiledMission.nodeAdded)
+            compiledMission.ok = true;
         },
         runMission: function() {
-          if (!compiledMission.ok) {
-            compileMission.error = "Mission not compiled properly!";
+          if (!compiledMission.ok && compiledMission.nodeAdded) {
+            compiledMission.error = "Mission not compiled properly!";
+            return;
+          }
+          //lets you know you didn't make plan a mission
+          if (!compiledMission.ok && !compiledMission.nodeAdded) {
+            compiledMission.error = "No mission planned!";
             return;
           }
 
@@ -588,7 +599,7 @@ console.log(client);
               case 'leds':
                 client.animateLeds(iter.commandSelect, iter.freq, iter.seconds);
                 $timeout(processCmd, 100);
-                compiledMission.emt-=100;
+                compiledMission.emt-=iter.seconds;
                 compiledMission.statusText = "Setting Glow " + iter.commandSelect + " at " + iter.freq +  "hz for " + iter.seconds + "seconds.";
                 break;
             }
@@ -1253,7 +1264,7 @@ console.log(client);
 
       // $scope.duration = 1000;
       // $scope.cmd = null;
-
+      //initializes flight
       var nodeInfo = null;
 
       // $scope.inUse = false;
@@ -1307,7 +1318,7 @@ console.log(client);
           $scope.blockName = 'Glow Node';
           nodeInfo = {
             kind: 'leds',
-            seconds: 2,
+            seconds: 2000,
             commandSelect: 'fire',
             freq: 5
           };
