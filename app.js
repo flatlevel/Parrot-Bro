@@ -205,9 +205,8 @@ console.log(client);
         });
     })
 
-    .factory('VideoStream', function(){
+    .factory('VideoStream', ['$window', function($window){
 
->>>>>>> Change NodeCopter stream into an angular service
       'use strict';
       var NS,
           socket,
@@ -271,7 +270,6 @@ console.log(client);
       }
 
       return {
-<<<<<<< HEAD
         NS: function (div, options) {
             var hostname, port;
             options = options || {};
@@ -288,18 +286,22 @@ console.log(client);
                 parser.write(data);
               });
 
-              parser.on('data', function (data) {
-                handleNalUnits(data.payload);
-              });
-              parser.on('end', function(data) {
-                output.end();
-              });
-            }
+          parser.on('data', function (data) {
+            handleNalUnits(data.payload);
+          });
+
+          parser.on('end', function(data) {
+            output.end();
+          });
+
+      };
+    }
       // enqueue callback oto be called with next (black&white) frame
       NS.prototype.onNextFrame = function (callback) {
           callbackOnce = callback;
       };
     }])
+
     // Want this to be a service so the mission data can be preserved.
     .factory('FlightSaver', function() {
       var firstEvent = false;
@@ -779,9 +781,8 @@ console.log(client);
       };
 
     })
-    
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
 
+    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
@@ -794,7 +795,6 @@ console.log(client);
       $scope.selectedLed = $scope.leds[0];
       $scope.flightPerf = 'wave';
       $scope.graphSelect = 'altitude';
-
       $scope.videoStream = VideoStream.NS($window.document.getElementById("droneStream"), {hostname: '127.0.0.1'});
 
 
