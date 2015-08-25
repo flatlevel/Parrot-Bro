@@ -135,7 +135,7 @@ console.log(client);
         });
     })
 
-    .factory('VideoStream', function(){
+    .factory('VideoStream', ['$window', function($window){
 
       'use strict';
       var NS,
@@ -186,7 +186,7 @@ console.log(client);
       }
 
       function setupCanvas(div) {
-          var canvas = document.createElement('canvas');
+          var canvas = $window.document.createElement('canvas');
 
           width = div.attributes.width ? div.attributes.width.value : 640;
           height = div.attributes.height ? div.attributes.height.value : 360;
@@ -203,8 +203,8 @@ console.log(client);
         NS: function (div, options) {
             var hostname, port;
             options = options || {};
-            hostname = options.hostname || window.document.location.hostname;
-            port = options.port || window.document.location.port;
+            hostname = options.hostname || $window.document.location.hostname;
+            port = options.port || $window.document.location.port;
 
             setupCanvas(div);
             setupAvc();
@@ -233,7 +233,7 @@ console.log(client);
       //window.FPVStream = NS;
 
 
-    })
+    }])
 
     // Want this to be a service so the mission data can be preserved.
     .factory('FlightSaver', function() {
@@ -672,7 +672,7 @@ console.log(client);
       };
 
     })
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope, MissionPlayer, FlightSaver, VideoStream) {
+    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $window, MissionPlayer, FlightSaver, VideoStream) {
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
@@ -685,7 +685,7 @@ console.log(client);
       $scope.selectedLed = $scope.leds[0];
       $scope.flightPerf = 'wave';
       $scope.graphSelect = 'altitude';
-      $scope.videoStream = VideoStream.NS(document.getElementById("droneStream"), {hostname: '127.0.0.1'});
+      $scope.videoStream = VideoStream.NS($window.document.getElementById("droneStream"), {hostname: '127.0.0.1'});
 
 
       /*
