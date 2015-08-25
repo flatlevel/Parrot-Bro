@@ -43,6 +43,108 @@ console.log(client);
   // require("dronestream").listen(server);
   // server.listen(5555);
 
+<<<<<<< HEAD
+// UX code
+  angular
+    .module('ForgeMod', [
+      'ngRoute',
+      'ngResource',
+      'ui.router',
+      'ngAnimate',
+      'ui.bootstrap',
+      'ui.utils',
+      'ngDragDrop',
+      'ngWebSocket',
+      'ng.epoch',
+      'ui.ace',
+      'googlechart'
+    ])
+    .config(function($stateProvider) {
+      $stateProvider
+        .state('fly', {
+          url:            '/',
+          templateUrl:    'views/fly.html',
+          controller:     'FlightCtrl'
+        })
+        .state('mission', {
+          url:            '/',
+          templateUrl:    'views/mission.html',
+          controller:     'MissionCtrl'
+        })
+        .state('code', {
+          url:            '/',
+          templateUrl:    'views/code.html',
+          controller:     'CodeCtrl'
+        })
+        .state('login', {
+          url:            '/',
+          templateUrl:    'views/forge-login.html',
+          controller:     'LoginCtrl'
+        })
+        .state('forge', {
+          templateUrl:    'views/forge.html',
+          controller:     'ForgeCtrl'
+        })
+      ;
+    })
+    .factory('Session',
+      function($resource) {
+        return $resource('http://stage.dronesmith.io/api/session', {},
+        {
+          sync: {
+            method: 'PUT'
+          },
+          authenticate: {
+            method: 'POST'
+          }
+        });
+    })
+
+    /*request animation frame polyfill service:*/
+    .factory('RequestAnimationFrame', ['$window', function($window){
+
+      'use strict';
+      var lastTime = 0,
+          vendors = ['ms', 'moz', 'webkit', 'o'],
+          x,
+          length,
+          currTime,
+          timeToCall;
+
+      for (x = 0, length = vendors.length; x < length && !$window.requestAnimationFrame; ++x) {
+          $window.requestAnimationFrame = $window[
+              vendors[x] + 'RequestAnimationFrame'
+          ];
+          $window.cancelAnimationFrame = $window[
+              vendors[x] + 'CancelAnimationFrame'
+          ] || $window[vendors[x] + 'CancelRequestAnimationFrame'];
+      }
+
+      if (!$window.requestAnimationFrame) {
+            requestAnimationFrame = function (callback, element) {
+              currTime = new Date().getTime();
+              timeToCall = Math.max(0, 16 - (currTime - lastTime));
+              lastTime = currTime + timeToCall;
+              return $window.setTimeout(function () {
+                  callback(currTime + timeToCall);
+              }, timeToCall);
+          }
+        }
+
+      if (!$window.cancelAnimationFrame) {
+          cancelAnimationFrame = function (id) {
+              clearTimeout(id);
+          };
+      }
+
+      return {
+        setCallback : function(callback){
+          requestAnimationFrame(callback)
+        }
+      }
+    }
+  ])
+
 // UX code
   angular
     .module('ForgeMod', [
@@ -146,66 +248,6 @@ console.log(client);
 
     /*nodecopter stream service:*/
     .factory('VideoStream', ['$window', 'RequestAnimationFrame', function($window, animate){
-
-<<<<<<< HEAD
-=======
-// UX code
-  angular
-    .module('ForgeMod', [
-      'ngRoute',
-      'ngResource',
-      'ui.router',
-      'ngAnimate',
-      'ui.bootstrap',
-      'ui.utils',
-      'ngDragDrop',
-      'ngWebSocket',
-      'ng.epoch',
-      'ui.ace',
-      'googlechart'
-    ])
-    .config(function($stateProvider) {
-      $stateProvider
-        .state('fly', {
-          url:            '/',
-          templateUrl:    'views/fly.html',
-          controller:     'FlightCtrl'
-        })
-        .state('mission', {
-          url:            '/',
-          templateUrl:    'views/mission.html',
-          controller:     'MissionCtrl'
-        })
-        .state('code', {
-          url:            '/',
-          templateUrl:    'views/code.html',
-          controller:     'CodeCtrl'
-        })
-        .state('login', {
-          url:            '/',
-          templateUrl:    'views/forge-login.html',
-          controller:     'LoginCtrl'
-        })
-        .state('forge', {
-          templateUrl:    'views/forge.html',
-          controller:     'ForgeCtrl'
-        })
-      ;
-    })
-    .factory('Session',
-      function($resource) {
-        return $resource('http://stage.dronesmith.io/api/session', {},
-        {
-          sync: {
-            method: 'PUT'
-          },
-          authenticate: {
-            method: 'POST'
-          }
-        });
-    })
-
-    .factory('VideoStream', ['$window', function($window){
 
       'use strict';
       var NS,
