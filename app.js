@@ -98,7 +98,7 @@ console.log(client);
           }
         });
     })
-    
+
     /*request animation frame polyfill service:*/
     .factory('RequestAnimationFrame', ['$window', function($window){
 
@@ -147,6 +147,67 @@ console.log(client);
     /*nodecopter stream service:*/
     .factory('VideoStream', ['$window', 'RequestAnimationFrame', function($window, animate){
 
+<<<<<<< HEAD
+=======
+// UX code
+  angular
+    .module('ForgeMod', [
+      'ngRoute',
+      'ngResource',
+      'ui.router',
+      'ngAnimate',
+      'ui.bootstrap',
+      'ui.utils',
+      'ngDragDrop',
+      'ngWebSocket',
+      'ng.epoch',
+      'ui.ace',
+      'googlechart'
+    ])
+    .config(function($stateProvider) {
+      $stateProvider
+        .state('fly', {
+          url:            '/',
+          templateUrl:    'views/fly.html',
+          controller:     'FlightCtrl'
+        })
+        .state('mission', {
+          url:            '/',
+          templateUrl:    'views/mission.html',
+          controller:     'MissionCtrl'
+        })
+        .state('code', {
+          url:            '/',
+          templateUrl:    'views/code.html',
+          controller:     'CodeCtrl'
+        })
+        .state('login', {
+          url:            '/',
+          templateUrl:    'views/forge-login.html',
+          controller:     'LoginCtrl'
+        })
+        .state('forge', {
+          templateUrl:    'views/forge.html',
+          controller:     'ForgeCtrl'
+        })
+      ;
+    })
+    .factory('Session',
+      function($resource) {
+        return $resource('http://stage.dronesmith.io/api/session', {},
+        {
+          sync: {
+            method: 'PUT'
+          },
+          authenticate: {
+            method: 'POST'
+          }
+        });
+    })
+
+    .factory('VideoStream', function(){
+
+>>>>>>> Change NodeCopter stream into an angular service
       'use strict';
       var NS,
           socket,
@@ -210,6 +271,7 @@ console.log(client);
       }
 
       return {
+<<<<<<< HEAD
         NS: function (div, options) {
             var hostname, port;
             options = options || {};
@@ -238,7 +300,6 @@ console.log(client);
           callbackOnce = callback;
       };
     }])
-
     // Want this to be a service so the mission data can be preserved.
     .factory('FlightSaver', function() {
       var firstEvent = false;
@@ -718,8 +779,9 @@ console.log(client);
       };
 
     })
-
+    
     .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
+
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
@@ -732,6 +794,7 @@ console.log(client);
       $scope.selectedLed = $scope.leds[0];
       $scope.flightPerf = 'wave';
       $scope.graphSelect = 'altitude';
+
       $scope.videoStream = VideoStream.NS($window.document.getElementById("droneStream"), {hostname: '127.0.0.1'});
 
 
