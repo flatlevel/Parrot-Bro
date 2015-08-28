@@ -9,6 +9,24 @@
           Mission Playlist
         </div>
         <div class="panel panel-body" id="missionQueue">
+          <!-- TODO fix this panel -->
+          <div class="panel panel-success">
+            <div class="panel panel-heading">
+              <div class="row">
+                <div class="col-xs-8">
+                  Control Node {{missionStatus.currentMission==-1? '[IN PROGRESS]' : ''}}
+                </div>
+              </div>
+            </div>
+            <div class="panel panel-body">
+                <fieldset class="form-group">
+                  <label>
+                    Duration (ms): 2500 Action:Take Off
+                  </label>
+                </fieldset>
+            </div>
+          </div>
+
           <div ng-repeat="mission in missionPlayList track by $index">
             <div ng-show="mission.kind=='primary'">
               <!-- Primary Node Panel -->
@@ -249,9 +267,25 @@
                 </div>
               </div>
             </div>
-
-
           </div>
+
+          <div class="panel panel-success">
+            <div class="panel panel-heading">
+              <div class="row">
+                <div class="col-xs-8">
+                  Control Node {{missionStatus.currentMission==missionStatus.length? '[IN PROGRESS]' : ''}}
+                </div>
+              </div>
+            </div>
+            <div class="panel panel-body">
+                <fieldset class="form-group">
+                  <label>
+                    Duration (ms): 2500 Action:Land
+                  </label>
+                </fieldset>
+            </div>
+          </div>
+
           <!-- <pre>{{missionPlayList | json}}</pre> -->
         </div>
       </div>
@@ -274,13 +308,15 @@
            Mission Control
         </div>
         <div class="panel panel-body" id="missionBlocks">
-          <p ng-show="missionStatus.emt">Mission Time Remaining: {{missionStatus.emt / 1000}} seconds</p>
+          <!-- Changed from Mission Time Remaining until update problem can be addressed -->
+          <p ng-show="missionStatus.emt">Total Mission Time: {{missionStatus.emt / 1000}} seconds</p>
           <p ng-show="missionStatus.error">{{missionStatus.error}}</p>
           <p ng-show="missionStatus.ok">Current Node: {{missionStatus.currentMission}}</p>
           <p ng-show="missionStatus.statusText">Mission Status: {{missionStatus.statusText}}</p>
+          <p ng-show="missionStatus.ok">Flight Make Up:</p>
           <progress>
             <bar ng-repeat="bar in missionStatus.progress track by $index" value="bar.percent" type="{{bar.type}}">
-              <span ng-hide="bar.value < 5">{{bar.percent}}%</span>
+              <span ng-hide="bar.value < 5 || !missionStatus.ok">{{bar.percent}}%</span>
             </bar>
           </progress>
           <button class="btn btn-primary" ng-click="runMission()">Execute Mission</button>
