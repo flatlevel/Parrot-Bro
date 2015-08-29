@@ -1372,7 +1372,15 @@ console.log(client);
                 })
 
                 $scope.selectedFlight = $scope.flightLogs[0];
-                console.log($scope.selectedFlight);
+                console.log($scope.selectedFlight)
+                $scope.downloadFile = function () {
+                  fs.writeFile("flights/" + $scope.selectedFlight.start, JSON.stringify($scope.selectedFlight), function (err) {
+                    if (err) 
+                      throw err;
+                    console.log('It\'s saved');
+                  });
+                }
+
                 $scope.showChart = function (dataName) {
                   return $scope.selectedFlight.DATA[dataName].chartObject;
                 }
