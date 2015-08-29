@@ -21,7 +21,7 @@
         ng-options="flight.start for flight in flightLogs">
       </select>
       <div class="row">
-        <div ng-repeat="option in showOptions" ng-show="option.show" class="col-sm-4">
+        <div ng-repeat="option in showOptions" ng-show="option.show" class="col-sm-6">
         <div google-chart chart="showChart(option.name)" style="height: 300px; padding-top: 10px"></div>  
       </div>
       </div>

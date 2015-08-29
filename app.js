@@ -325,6 +325,7 @@ console.log(client);
       }
     })
     .factory('VideoPlayer', function() {
+      var mkdirp = require('mkdirp');
       var outputStream = null;
       var parser = new Parser();
       parser
@@ -351,6 +352,10 @@ console.log(client);
             outputStream.end();
           }
 
+          mkdirp('videos/', function (err) {
+            if (err)
+              console.error(err)
+          });
           outputStream = require('fs').createWriteStream('videos/'+fname+'.h264');
           video.pipe(parser);
         },
@@ -679,6 +684,7 @@ console.log(client);
         if ($scope.telemetry.header == prevHeader) {
           $scope.isConnected = false;
         }
+        console.log(client);
       }, 5000);
 
       $scope.addAlert = function(type, msg) {
@@ -1165,10 +1171,13 @@ console.log(client);
     })
     .controller ('ForgeCtrl', function($scope, $state, Session, $http, $timeout) {
       var fs = require('fs');
+      var mkdirp = require('mkdirp');
       $scope.userInfo = null;
 
-
-
+      mkdirp('flights', function (err) {
+        if (err) 
+          console.error(err)
+      });
       //
       // Syncing algo
       // TODO add memory limit
