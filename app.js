@@ -213,7 +213,8 @@ console.log(client);
       'ngDragDrop',
       'ngWebSocket',
       'ng.epoch',
-      'ui.ace'
+      'ui.ace',
+      'googlechart'
     ])
     .config(function($stateProvider) {
       $stateProvider
@@ -1162,7 +1163,7 @@ console.log(client);
         ;
       }
     })
-    .controller ('ForgeCtrl', function($scope, $state, Session, $http) {
+    .controller ('ForgeCtrl', function($scope, $state, Session, $http, $timeout) {
       var fs = require('fs');
       $scope.userInfo = null;
 
@@ -1238,6 +1239,98 @@ console.log(client);
         })
       };
 
+      function createChart (files, dataName, unit) {
+        angular.forEach(files, function (stats) {
+          stats.DATA[dataName] = {};
+          stats.DATA[dataName].chartObject = {
+            "data": {
+              "cols":[{"label": "Timestamp","type": "string"},{"label": '"' + dataName + '"',"type": "number"}], 
+              "rows":[{"c": []}]
+            },
+            "display": true,
+            "options": {
+              "title": '"' + dataName + '"',
+              "displayExactValues": true,
+              "vAxis": {
+                "title": unit,
+                "gridlines": {
+                  "count": 10
+                }
+              },
+              "hAxis": {
+                "title": "timestamp (minute/second/millisecond)"
+              }
+            },
+            "type": "LineChart"
+          };
+
+          var index = 0;
+
+          angular.forEach(stats.flight, function (flightRecord) {
+            if (flightRecord.data.hasOwnProperty('demo')) {
+              var dateFormat = new Date(flightRecord.at);
+              var minutes = dateFormat.getMinutes();
+              var seconds = dateFormat.getSeconds();
+              var milliseconds = dateFormat.getMilliseconds();
+              var time = minutes + ":" + seconds + ":" + milliseconds;
+              var flightData = flightRecord.data.demo;
+              var rotation = flightData.rotation;
+
+              switch (dataName) {
+                case "altitude":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.altitude});
+                  index++;
+                  break;
+                case "pitch":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": rotation.pitch});
+                  index++;
+                  break;
+                case "roll":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": rotation.roll});
+                  index++;
+                  break;
+                case "yaw":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": rotation.yaw});
+                  index++;
+                  break;
+                case "battery consumption":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.batteryPercentage});
+                  index++;
+                  break;
+                case "xVelocity":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.xVelocity});
+                  index++;
+                  break;
+                case "yVelocity":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.yVelocity});
+                  index++;
+                  break;
+                case "zVelocity":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.zVelocity});
+                  index++;
+                  break;
+              }
+            }
+          });
+        });
+      }
+
       Session
         .get({}, function(data) {
           $scope.userInfo = data.userData || null;
@@ -1250,11 +1343,55 @@ console.log(client);
             // test the sync
             $scope.sync();
 
+            // options to show what kind of stat
+            $scope.showOptions = [
+              {name: "altitude", unit: "meter", show: true},
+              {name: "yaw", unit: "degrees", show: true},
+              {name: "pitch", unit: "degrees", show: true},
+              {name: "roll", unit: "degrees", show: true},
+              {name: "battery consumption", unit: "percentage", show: true},
+              {name: "xVelocity", unit: "m/(s^2)", show: true},
+              {name: "yVelocity", unit: "m/(s^2)", show: true},
+              {name: "zVelocity", unit: "m/(s^2)", show: true},
+            ];
+
+            // chart      
+            $scope.flightLogs = [];
+
+            $http
+              .get("http://stage.dronesmith.io/api/flight/" + $scope.userInfo._id)
+              .then(function(success) {
+                $scope.flightLogs = success.data;
+
+                angular.forEach($scope.flightLogs, function (file) {
+                  file.DATA = {};
+                })
+
+                angular.forEach($scope.showOptions, function (option) {
+                  createChart($scope.flightLogs, option.name, option.unit);
+                })
+
+                $scope.selectedFlight = $scope.flightLogs[0];
+                console.log($scope.selectedFlight)
+                $scope.downloadFile = function () {
+                  fs.writeFile("flights/" + $scope.selectedFlight.start, JSON.stringify($scope.selectedFlight), function (err) {
+                    if (err) 
+                      throw err;
+                    console.log('It\'s saved');
+                  });
+                }
+
+                $scope.showChart = function (dataName) {
+                  return $scope.selectedFlight.DATA[dataName].chartObject;
+                }
+              
+              }, function(error) {
+                console.log(error);
+            });
           }
         }, function(error) {
           $state.go('login');
-        })
-      ;
+        });
 
       $scope.logout = function() {
         Session
@@ -1266,7 +1403,6 @@ console.log(client);
             }
           });
       };
-
     })
     .controller('ConnectCtrl', function($scope, $modalInstance) {
       $scope.ok = function (form) {
