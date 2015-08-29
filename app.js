@@ -1239,7 +1239,7 @@ console.log(client);
         })
       };
 
-      function createChart (files, dataName) {
+      function createChart (files, dataName, unit) {
         angular.forEach(files, function (stats) {
           stats.DATA[dataName] = {};
           stats.DATA[dataName].chartObject = {
@@ -1252,13 +1252,13 @@ console.log(client);
               "title": '"' + dataName + '"',
               "displayExactValues": true,
               "vAxis": {
-                "title": "Meter",
+                "title": unit,
                 "gridlines": {
                   "count": 10
                 }
               },
               "hAxis": {
-                "title": "timestamp"
+                "title": "timestamp (minute/second/millisecond)"
               }
             },
             "type": "LineChart"
@@ -1268,29 +1268,61 @@ console.log(client);
 
           angular.forEach(stats.flight, function (flightRecord) {
             if (flightRecord.data.hasOwnProperty('demo')) {
+              var dateFormat = new Date(flightRecord.at);
+              var minutes = dateFormat.getMinutes();
+              var seconds = dateFormat.getSeconds();
+              var milliseconds = dateFormat.getMilliseconds();
+              var time = minutes + ":" + seconds + ":" + milliseconds;
+              var flightData = flightRecord.data.demo;
+              var rotation = flightData.rotation;
+
               switch (dataName) {
                 case "altitude":
                   stats.DATA[dataName].chartObject.data.rows.push({"c": []});
-                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
-                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.altitude});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.altitude});
                   index++;
                   break;
                 case "pitch":
                   stats.DATA[dataName].chartObject.data.rows.push({"c": []});
-                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
-                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.rotation.pitch});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": rotation.pitch});
                   index++;
                   break;
                 case "roll":
                   stats.DATA[dataName].chartObject.data.rows.push({"c": []});
-                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
-                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.rotation.roll});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": rotation.roll});
                   index++;
                   break;
                 case "yaw":
                   stats.DATA[dataName].chartObject.data.rows.push({"c": []});
-                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + flightRecord.at + '"'});
-                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightRecord.data.demo.rotation.yaw});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": rotation.yaw});
+                  index++;
+                  break;
+                case "battery consumption":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.batteryPercentage});
+                  index++;
+                  break;
+                case "xVelocity":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.xVelocity});
+                  index++;
+                  break;
+                case "yVelocity":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.yVelocity});
+                  index++;
+                  break;
+                case "zVelocity":
+                  stats.DATA[dataName].chartObject.data.rows.push({"c": []});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": '"' + time + '"'});
+                  stats.DATA[dataName].chartObject.data.rows[index].c.push({"v": flightData.zVelocity});
                   index++;
                   break;
               }
@@ -1313,10 +1345,14 @@ console.log(client);
 
             // options to show what kind of stat
             $scope.showOptions = [
-              {name: "altitude", show: true},
-              {name: "yaw", show: true},
-              {name: "pitch", show: true},
-              {name: "roll", show: true}
+              {name: "altitude", unit: "meter", show: true},
+              {name: "yaw", unit: "degrees", show: true},
+              {name: "pitch", unit: "degrees", show: true},
+              {name: "roll", unit: "degrees", show: true},
+              {name: "battery consumption", unit: "percentage", show: true},
+              {name: "xVelocity", unit: "m/(s^2)", show: true},
+              {name: "yVelocity", unit: "m/(s^2)", show: true},
+              {name: "zVelocity", unit: "m/(s^2)", show: true},
             ];
 
             // chart      
@@ -1332,16 +1368,14 @@ console.log(client);
                 })
 
                 angular.forEach($scope.showOptions, function (option) {
-                  createChart($scope.flightLogs, option.name);
+                  createChart($scope.flightLogs, option.name, option.unit);
                 })
 
                 $scope.selectedFlight = $scope.flightLogs[0];
-
+                console.log($scope.selectedFlight);
                 $scope.showChart = function (dataName) {
                   return $scope.selectedFlight.DATA[dataName].chartObject;
                 }
-
-                console.log($scope.flightLogs)
               
               }, function(error) {
                 console.log(error);
