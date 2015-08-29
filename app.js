@@ -684,7 +684,6 @@ console.log(client);
         if ($scope.telemetry.header == prevHeader) {
           $scope.isConnected = false;
         }
-        console.log(client);
       }, 5000);
 
       $scope.addAlert = function(type, msg) {
