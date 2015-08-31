@@ -325,7 +325,6 @@ console.log(client);
       }
     })
     .factory('VideoPlayer', function() {
-      var mkdirp = require('mkdirp');
       var outputStream = null;
       var parser = new Parser();
       parser
@@ -352,10 +351,7 @@ console.log(client);
             outputStream.end();
           }
 
-          mkdirp('videos/', function (err) {
-            if (err)
-              console.error(err)
-          });
+          fs.mkdir('videos', function () {});
           outputStream = require('fs').createWriteStream('videos/'+fname+'.h264');
           video.pipe(parser);
         },
@@ -659,6 +655,7 @@ console.log(client);
       $scope.currentState = 'fly';
       $scope.alerts= [ ];
       var prevHeader =  0;
+      var ping = require('ping');
 
       $rootScope.leds = ['blinkGreenRed', 'blinkGreen', 'blinkRed', 'blinkOrange', 'snakeGreenRed',
         'fire', 'standard', 'red', 'green', 'redSnake', 'blank', 'rightMissile',
@@ -685,6 +682,22 @@ console.log(client);
           $scope.isConnected = false;
         }
       }, 5000);
+
+      $interval(function () {
+        ping.sys.probe($scope.currentIp, function (isConnected) {
+          if (!isConnected) {
+            $scope.DroneStatus = "Not connected";
+            $scope.telemetry.demo.altitude = 0;
+            $scope.telemetry.demo.rotation.yaw = 0;
+            $scope.telemetry.demo.rotation.pitch = 0;
+            $scope.telemetry.demo.rotation.roll = 0;
+            $scope.telemetry.demo.batteryPercentage = 0;
+            $scope.telemetry.demo.xVelocity = 0;
+            $scope.telemetry.demo.yVelocity = 0;
+            $scope.telemetry.demo.zVelocity = 0;
+          }
+        });
+      }, 2000);
 
       $scope.addAlert = function(type, msg) {
         $scope.alerts.push({type: type, msg: msg});
@@ -1170,13 +1183,9 @@ console.log(client);
     })
     .controller ('ForgeCtrl', function($scope, $state, Session, $http, $timeout) {
       var fs = require('fs');
-      var mkdirp = require('mkdirp');
       $scope.userInfo = null;
 
-      mkdirp('flights', function (err) {
-        if (err) 
-          console.error(err)
-      });
+      fs.mkdir('flights', function () {});
       //
       // Syncing algo
       // TODO add memory limit
