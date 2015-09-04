@@ -654,6 +654,7 @@ console.log(client);
       $state.go('fly');
       $scope.currentState = 'fly';
       $scope.alerts= [ ];
+      $rootScope.isConnected = false;
       var prevHeader =  0;
       var ping = require('ping');
 
@@ -675,29 +676,24 @@ console.log(client);
         prevHeader = data.header;
         $scope.isConnected = true;
         $scope.DroneStatus = "Connected on " + $scope.currentIp;
+        $rootScope.isConnected = true;
       });
 
-      $interval(function () {
-        if ($scope.telemetry.header == prevHeader) {
-          $scope.isConnected = false;
-        }
-      }, 5000);
+      // $interval(function () {
+      //   if ($scope.telemetry.header == prevHeader) {
+      //     $scope.isConnected = false;
+      //   }
+      // }, 5000);
 
       $interval(function () {
         ping.sys.probe($scope.currentIp, function (isConnected) {
           if (!isConnected) {
             $scope.DroneStatus = "Not connected";
-            $scope.telemetry.demo.altitude = 0;
-            $scope.telemetry.demo.rotation.yaw = 0;
-            $scope.telemetry.demo.rotation.pitch = 0;
-            $scope.telemetry.demo.rotation.roll = 0;
-            $scope.telemetry.demo.batteryPercentage = 0;
-            $scope.telemetry.demo.xVelocity = 0;
-            $scope.telemetry.demo.yVelocity = 0;
-            $scope.telemetry.demo.zVelocity = 0;
+            $rootScope.isConnected = false;
+            $scope.isConnected = false;
           }
         });
-      }, 2000);
+      }, 1000);
 
       $scope.addAlert = function(type, msg) {
         $scope.alerts.push({type: type, msg: msg});
@@ -738,7 +734,7 @@ console.log(client);
       };
 
     })
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope, MissionPlayer, FlightSaver) {
+    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, MissionPlayer, FlightSaver) {
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
@@ -871,12 +867,20 @@ console.log(client);
             case 'zVelocity': $scope.realtimeLineFeed = liveLineData.next(data.demo.zVelocity); break;
           }
         }
-
-        // if (MissionPlayer.inMission()) {
-        //
-        // }
+        
+        $interval (function(){
+          if (!$rootScope.isConnected) {
+            $scope.telemetry.demo.altitude = 0;
+            $scope.telemetry.demo.rotation.yaw = 0;
+            $scope.telemetry.demo.rotation.pitch = 0;
+            $scope.telemetry.demo.rotation.roll = 0;
+            $scope.telemetry.demo.batteryPercentage = 0;
+            $scope.telemetry.demo.xVelocity = 0;
+            $scope.telemetry.demo.yVelocity = 0;
+            $scope.telemetry.demo.zVelocity = 0;
+          }
+        }, 1000);
       });
-
 
       $scope.Clear = function() {
         client.disableEmergency();
