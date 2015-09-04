@@ -34,7 +34,7 @@ build/Release
 # see https://npmjs.org/doc/faq.html#Should-I-check-my-node_modules-folder-into-git
 node_modules
 public/lib
-log/
+
 
 # ignore DS_Store
 **/*.DS_Store
@@ -46,4 +46,5 @@ dump.rdb
 .s3npm.json
 mediadb.dump.sql
 
-vid.mp4
+flights
+
