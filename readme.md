@@ -1,6 +1,17 @@
 
-# Parrot Bro v0
+# Parrot Bro v0.1
 
 ## How to run
+	
+Node-webkit is required for this project. Use 
 
-	<parrotBro_dir>$ ./run.sh
+	$ npm install -g nw
+
+to get it. Then 	
+
+	<parrotBro_dir>$ nw
+
+to run it.
+
+Parrot Bro expects to be connected to the drone for proper use, which typically involves a closed UDP network. The cloud module requires a wifi connection to the internet, and parrotbro is capable of switching between the two automatically.
+

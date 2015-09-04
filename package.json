@@ -22,6 +22,7 @@
     "position": "center"
   },
   "dependencies": {
+    "ar-drone": "^0.3.3",
     "async": "^1.4.0",
     "mavlink": "^1.0.1",
     "ping": "^0.1.10",
