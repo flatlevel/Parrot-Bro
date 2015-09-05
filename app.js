@@ -1165,7 +1165,6 @@ console.log(client);
                   $http
                     .post('http://stage.dronesmith.io/api/flight/' + $scope.userInfo._id, json)
                     .success(function(data) {
-                      console.log(data);
                       json._id = data.flight;
                       fs.writeFile('flights/' + file, JSON.stringify(json), function(err) {
                         if (err) {
@@ -1176,7 +1175,7 @@ console.log(client);
                       });
                     })
                     .error(function(data) {
-                      console.log('Error');
+                      console.log('[Sync] Error');
                       done(data);
                     })
                   ;
@@ -1195,7 +1194,7 @@ console.log(client);
             if (error) {
               done(error);
             } else {
-              console.log('file processed');
+              console.log('[Sync] processed');
               done();
             }
           });
@@ -1213,7 +1212,7 @@ console.log(client);
           if (err) {
             console.log(err);
           } else {
-            console.log('success!');
+            console.log('[Sync] success!');
           }
         })
       };
@@ -1237,7 +1236,7 @@ console.log(client);
                 }
               },
               "hAxis": {
-                "title": "timestamp (minute/second/millisecond)"
+                "title": "timestamp (second/millisecond)"
               }
             },
             "type": "LineChart"
@@ -1245,13 +1244,15 @@ console.log(client);
 
           var index = 0;
 
+          var startFlightTime = new Date(stats.flight[0].at).getTime();
+
           angular.forEach(stats.flight, function (flightRecord) {
             if (flightRecord.data.hasOwnProperty('demo')) {
-              var dateFormat = new Date(flightRecord.at);
+              var dateFormat = new Date((new Date(flightRecord.at).getTime()) - startFlightTime);
               var minutes = dateFormat.getMinutes();
               var seconds = dateFormat.getSeconds();
               var milliseconds = dateFormat.getMilliseconds();
-              var time = minutes + ":" + seconds + ":" + milliseconds;
+              var time = seconds + "." + milliseconds;
               var flightData = flightRecord.data.demo;
               var rotation = flightData.rotation;
 
@@ -1356,7 +1357,7 @@ console.log(client);
                   fs.writeFile("flights/" + $scope.selectedFlight.start, JSON.stringify($scope.selectedFlight), function (err) {
                     if (err)
                       throw err;
-                    console.log('It\'s saved');
+                    console.log('[sync] Saved to', "flights/" + $scope.selectedFlight.start);
                   });
                 }
 
@@ -1365,7 +1366,7 @@ console.log(client);
                 }
 
               }, function(error) {
-                console.log(error);
+                console.log('[sync]' + error);
             });
           }
         }, function(error) {
