@@ -219,23 +219,22 @@ console.log(client);
             setupCanvas(div);
             setupAvc();
 
+            console.log(div, options);
+
             parser = new Parser();
               tcpVideoStream.on('data', function (data) {
                 parser.write(data);
               });
 
-            console.log(div, options);
+              parser.on('data', function (data) {
+                handleNalUnits(data.payload);
+              });
 
-          parser.on('data', function (data) {
-            handleNalUnits(data.payload);
-          });
-
-          parser.on('end', function(data) {
-            output.end();
-          });
-
-      }
-    }
+              parser.on('end', function(data) {
+                output.end();
+              });
+            }
+          }
       // enqueue callback oto be called with next (black&white) frame
       NS.prototype.onNextFrame = function (callback) {
           callbackOnce = callback;
@@ -721,9 +720,8 @@ console.log(client);
       };
 
     })
-    
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
 
+    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
