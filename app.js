@@ -154,42 +154,19 @@ console.log(client);
           setupCanvas(div);
           setupAvc();
 
-          console.log(div, options);
-
-          // socket = new WebSocket(
-          //      'ws://' + hostname + ':' + port + '/dronestream'
-          // );
-          // socket.binaryType = 'arraybuffer';
-          // socket.onmessage = handleNalUnits;
-
-          // console.log('connecting to drone...');
-          //
-          // tcpVideoStream.connect(function() {
-          //   console.log('connected.');
-          //
-          //   tcpVideoStream.on('error', function (err) {
-          //     console.log(err.message);
-          //     tcpVideoStream.end();
-          //     tcpVideoStream.emit("end");
-          //     // init();
-          //   });
-          //   // //
           parser = new Parser();
             tcpVideoStream.on('data', function (data) {
               parser.write(data);
             });
-          // });
 
-          // //
           parser.on('data', function (data) {
             handleNalUnits(data.payload);
           });
-          //
+
           parser.on('end', function(data) {
             output.end();
           });
 
-          // tcpVideoStream.pipe(parser);
       };
 
       // enqueue callback oto be called with next (black&white) frame
@@ -720,7 +697,7 @@ console.log(client);
           client = drone.createClient({ip: selectedItem});
 
           if (!client) {
-            $scope.addAlert('danger', 'Could not connect to a parrot');
+            $scope.addAlert('danger', 'Could not connect to a drone');
             $scope.DroneStatus = 'Not connected';
             $scope.isConnected = false;
           } else {
@@ -977,22 +954,22 @@ console.log(client);
 
     })
     .controller('CodeCtrl', function($scope, $timeout) {
+
+      // TODO this needs to be reafactored.
+      // For now, just got the terminal in order.
+
+      $scope.languages = [
+        {'name': 'Javascript',
+         'sampleCode':
+            "client.takeoff();\n" +
+            "client.after(5000, function() { \n" +
+            "  this.stop();\n" +
+            "  this.land();\n" +
+          "});"
+        }
+      ];
+
       $scope.world = "";
-
-        // TODO this needs to be reafactored.
-        // For now, just got the terminal in order.
-
-        $scope.languages = [
-          {'name': 'Javascript',
-           'sampleCode':
-                  "client.takeoff();\n" +
-                  "client.after(5000, function() { \n" +
-                  "  this.stop();\n" +
-                  "  this.land();\n" +
-                  "});"
-          }
-        ];
-
         $scope.language = $scope.languages[0];
         var editor = null;
         var con = null;
@@ -1000,32 +977,17 @@ console.log(client);
         $scope.editorOptions = {
           animatedScroll: true,
           showPrintMargin: false,
+          theme: 'solarized_dark',
           mode: $scope.language.name.toLowerCase(),
           onLoad: function (_editor) {
             editor = _editor;
-            // var _session = _editor.getSession();
-            // var _renderer = _editor.renderer;
-
-            // _editor.setUndoManager(new ace.UndoManager());
-            // _eidtor.getUndoManager().reset();
-
-            // _editor.setShowPrintMargin(false);
-
-            // $scope.languageChanged = function() {
-            //   console.log(_session);
-            //   if($scope.language.name === 'C/C++'){
-            //     _session.setMode("ace/mode/" + 'c_cpp');
-            //   }
-            //   else{
-            //     _session.setMode("ace/mode/" + $scope.language.name.toLowerCase());
-            //   }
-            // };
           }
         };
 
         $scope.consoleOptions = {
           animatedScroll: true,
           showPrintMargin: false,
+          theme: 'solarized_dark',
           showLineNumbers: false,
           readonly: true,
           onLoad: function (_editor) {
@@ -1053,18 +1015,18 @@ console.log(client);
 
         // run and reset button
         $scope.run = function(){
-          if($scope.language.name === 'C/C++') {
+          if ($scope.language.name === 'C/C++') {
             $scope.world = [];
             $scope.world.push("[ERROR] C/C++ currently not supported by forge.\r\n");
             return;
           }
-          if( $('div.ace_error').is(':visible') ){
+
+          if ($('div.ace_error').is(':visible')) {
             $scope.dynamic = 100;
             $scope.type = 'danger';
             $scope.message = 'Compiler Error :('
-            $timeout(function(){$scope.world = 'Syntax error'}, 600);
-          }
-          else{
+            $timeout( function() { $scope.world = 'Syntax error' }, 600);
+          } else {
             $scope.dynamic = 100;
             $scope.message = 'Compiled Successfully :)';
             $scope.type = 'success';
@@ -1081,8 +1043,10 @@ console.log(client);
               $scope.dynamic = 100;
               $scope.type = 'danger';
               $scope.message = 'Compiler Error :(';
+            } finally {
+              // Reset console after execution.
+              console.log = oldLog;
             }
-
           }
         };
 
@@ -1090,13 +1054,12 @@ console.log(client);
           client.land();
         }
 
-        $scope.reset = function(){
+        $scope.reset = function() {
           $scope.dynamic = 0;
           $scope.type = null;
           $scope.world = '';
           $scope.message = '';
         };
-
     })
     .controller('MissionCtrl', function($scope, MissionPlayer) {
 
@@ -1131,9 +1094,8 @@ console.log(client);
         client.land();
       }
 
+      // FIXME
       // Set up drag/drop logic
-      // TODO - delete blocks
-      // TODO - rearrange blocks
       // dragula([document.getElementById('missionQueue'),
       //   document.getElementById('missionBlocks')], {
       //   copy: true,
@@ -1207,7 +1169,6 @@ console.log(client);
                   $http
                     .post('http://stage.dronesmith.io/api/flight/' + $scope.userInfo._id, json)
                     .success(function(data) {
-                      console.log(data);
                       json._id = data.flight;
                       fs.writeFile('flights/' + file, JSON.stringify(json), function(err) {
                         if (err) {
@@ -1218,7 +1179,7 @@ console.log(client);
                       });
                     })
                     .error(function(data) {
-                      console.log('Error');
+                      console.log('[Sync] Error');
                       done(data);
                     })
                   ;
@@ -1237,7 +1198,7 @@ console.log(client);
             if (error) {
               done(error);
             } else {
-              console.log('file processed');
+              console.log('[Sync] processed');
               done();
             }
           });
@@ -1255,7 +1216,7 @@ console.log(client);
           if (err) {
             console.log(err);
           } else {
-            console.log('success!');
+            console.log('[Sync] success!');
           }
         })
       };
@@ -1265,7 +1226,7 @@ console.log(client);
           stats.DATA[dataName] = {};
           stats.DATA[dataName].chartObject = {
             "data": {
-              "cols":[{"label": "Timestamp","type": "string"},{"label": '"' + dataName + '"',"type": "number"}], 
+              "cols":[{"label": "Timestamp","type": "string"},{"label": '"' + dataName + '"',"type": "number"}],
               "rows":[{"c": []}]
             },
             "display": true,
@@ -1279,7 +1240,7 @@ console.log(client);
                 }
               },
               "hAxis": {
-                "title": "timestamp (minute/second/millisecond)"
+                "title": "timestamp (second/millisecond)"
               }
             },
             "type": "LineChart"
@@ -1287,13 +1248,15 @@ console.log(client);
 
           var index = 0;
 
+          var startFlightTime = new Date(stats.flight[0].at).getTime();
+
           angular.forEach(stats.flight, function (flightRecord) {
             if (flightRecord.data.hasOwnProperty('demo')) {
-              var dateFormat = new Date(flightRecord.at);
+              var dateFormat = new Date((new Date(flightRecord.at).getTime()) - startFlightTime);
               var minutes = dateFormat.getMinutes();
               var seconds = dateFormat.getSeconds();
               var milliseconds = dateFormat.getMilliseconds();
-              var time = minutes + ":" + seconds + ":" + milliseconds;
+              var time = seconds + "." + milliseconds;
               var flightData = flightRecord.data.demo;
               var rotation = flightData.rotation;
 
@@ -1376,7 +1339,7 @@ console.log(client);
               {name: "zVelocity", unit: "m/(s^2)", show: true},
             ];
 
-            // chart      
+            // chart
             $scope.flightLogs = [];
 
             $http
@@ -1396,18 +1359,18 @@ console.log(client);
                 console.log($scope.selectedFlight)
                 $scope.downloadFile = function () {
                   fs.writeFile("flights/" + $scope.selectedFlight.start, JSON.stringify($scope.selectedFlight), function (err) {
-                    if (err) 
+                    if (err)
                       throw err;
-                    console.log('It\'s saved');
+                    console.log('[sync] Saved to', "flights/" + $scope.selectedFlight.start);
                   });
                 }
 
                 $scope.showChart = function (dataName) {
                   return $scope.selectedFlight.DATA[dataName].chartObject;
                 }
-              
+
               }, function(error) {
-                console.log(error);
+                console.log('[sync]' + error);
             });
           }
         }, function(error) {
