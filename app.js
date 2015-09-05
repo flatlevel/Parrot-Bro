@@ -12,7 +12,6 @@
   var parser = new Parser();
 
   var client = drone.createClient();
-  var tcpVideoStream = client.getVideoStream();
   // var output = require('fs').createWriteStream('./vid.mp4');
   client.config('video:video_channel', 0);
 
@@ -25,12 +24,12 @@ console.log(client);
   // tcpVideoStream.connect(function() {
   //   console.log('connected.');
 
-    tcpVideoStream.on('error', function (err) {
-      console.log(err.message);
-      tcpVideoStream.end();
-      tcpVideoStream.emit("end");
-      // init();
-    });
+    // tcpVideoStream.on('error', function (err) {
+    //   console.log(err.message);
+    //   tcpVideoStream.end();
+    //   tcpVideoStream.emit("end");
+    //   // init();
+    // });
     // //
     // // parser = new Parser();
     // tcpVideoStream.on('data', function (data) {
@@ -42,6 +41,25 @@ console.log(client);
   // var server = http.createServer(function(req, res) {});
   // require("dronestream").listen(server);
   // server.listen(5555);
+
+  // rewrite the library function not to keep trying to stream video 
+  // when there is an error
+  var Client = require('./node_modules/ar-drone/lib/Client.js');
+
+  Client.prototype._newTcpVideoStream = function () {
+    var stream = new Client.TcpVideoStream(this._options);
+    var callback = function (err) {
+      if (err) {
+        console.log('TcpVideoStream error: %s', err.message);
+      }
+    };
+
+    stream.connect(callback);
+    stream.on('error', callback);
+    return stream;
+  };
+
+  var tcpVideoStream = client.getVideoStream();
 
 // UX code
   angular
