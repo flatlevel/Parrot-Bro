@@ -33,150 +33,15 @@ console.log(client);
     });
     // //
     // // parser = new Parser();
-    tcpVideoStream.on('data', function (data) {
-      // console.log(data);
-      // parser.write(data);
-    });
+    // tcpVideoStream.on('data', function (data) {
+    //   // console.log(data);
+    //   // parser.write(data);
+    // });
   // });
 
   // var server = http.createServer(function(req, res) {});
   // require("dronestream").listen(server);
   // server.listen(5555);
-
-  /* requestAnimationFrame polyfill: */
-(function (window) {
-    'use strict';
-    var lastTime = 0,
-        vendors = ['ms', 'moz', 'webkit', 'o'],
-        x,
-        length,
-        currTime,
-        timeToCall;
-
-    for (x = 0, length = vendors.length; x < length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[
-            vendors[x] + 'RequestAnimationFrame'
-        ];
-        window.cancelAnimationFrame = window[
-            vendors[x] + 'CancelAnimationFrame'
-        ] || window[vendors[x] + 'CancelRequestAnimationFrame'];
-    }
-
-    if (!window.requestAnimationFrame) {
-        window.requestAnimationFrame = function (callback, element) {
-            currTime = new Date().getTime();
-            timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            lastTime = currTime + timeToCall;
-            return window.setTimeout(function () {
-                callback(currTime + timeToCall);
-            }, timeToCall);
-        };
-    }
-
-    if (!window.cancelAnimationFrame) {
-        window.cancelAnimationFrame = function (id) {
-            clearTimeout(id);
-        };
-    }
-}(window));
-
-  /* NodeCopterStream: */
-  (function (window, document, undefined) {
-      'use strict';
-      var NS,
-          socket,
-          avc,
-          webGLCanvas,
-          width,
-          height,
-          callbackOnce = null;
-
-      function setupAvc() {
-          avc = new Avc();
-          avc.configure({
-              filter: 'original',
-              filterHorLuma: 'optimized',
-              filterVerLumaEdge: 'optimized',
-              getBoundaryStrengthsA: 'optimized'
-          });
-          avc.onPictureDecoded = handleDecodedFrame;
-      }
-
-      function handleNalUnits(message) {
-                    // console.log(message);
-          avc.decode(new Uint8Array(message));
-      }
-
-      function handleDecodedFrame(buffer, bufWidth, bufHeight) {
-          var callback;
-
-          requestAnimationFrame(function () {
-              var lumaSize = bufWidth * bufHeight,
-                  chromaSize = lumaSize >> 2;
-
-              webGLCanvas.YTexture.fill(buffer.subarray(0, lumaSize));
-              webGLCanvas.UTexture.fill(buffer.subarray(lumaSize, lumaSize + chromaSize));
-              webGLCanvas.VTexture.fill(buffer.subarray(lumaSize + chromaSize, lumaSize + 2 * chromaSize));
-              webGLCanvas.drawScene();
-          });
-
-          // call callback with Y portion (grayscale image)
-          if (null !== callbackOnce && width) {
-              callback = callbackOnce;
-              callbackOnce = null;
-              // decoded buffer size may be larger,
-              // so use subarray with actual dimensions
-              callback(buffer.subarray(0, width * height));
-          }
-      }
-
-      function setupCanvas(div) {
-          var canvas = document.createElement('canvas');
-
-          width = div.attributes.width ? div.attributes.width.value : 640;
-          height = div.attributes.height ? div.attributes.height.value : 360;
-
-          canvas.width = width;
-          canvas.height = height;
-          canvas.style.backgroundColor = "#333333";
-          div.appendChild(canvas);
-
-          webGLCanvas = new YUVWebGLCanvas(canvas, new Size(width, height));
-      }
-
-
-      NS = function (div, options) {
-          var hostname, port;
-          options = options || {};
-          hostname = options.hostname || window.document.location.hostname;
-          port = options.port || window.document.location.port;
-
-          setupCanvas(div);
-          setupAvc();
-
-          parser = new Parser();
-            tcpVideoStream.on('data', function (data) {
-              parser.write(data);
-            });
-
-          parser.on('data', function (data) {
-            handleNalUnits(data.payload);
-          });
-
-          parser.on('end', function(data) {
-            output.end();
-          });
-
-      };
-
-      // enqueue callback oto be called with next (black&white) frame
-      NS.prototype.onNextFrame = function (callback) {
-          callbackOnce = callback;
-      };
-
-      window.FPVStream = NS;
-
-  }(window, document, undefined));
 
 // UX code
   angular
@@ -232,7 +97,207 @@ console.log(client);
             method: 'POST'
           }
         });
-    })    // Want this to be a service so the mission data can be preserved.
+    })
+
+// UX code
+  angular
+    .module('ForgeMod', [
+      'ngRoute',
+      'ngResource',
+      'ui.router',
+      'ngAnimate',
+      'ui.bootstrap',
+      'ui.utils',
+      'ngDragDrop',
+      'ngWebSocket',
+      'ng.epoch',
+      'ui.ace',
+      'googlechart'
+    ])
+    .config(function($stateProvider) {
+      $stateProvider
+        .state('fly', {
+          url:            '/',
+          templateUrl:    'views/fly.html',
+          controller:     'FlightCtrl'
+        })
+        .state('mission', {
+          url:            '/',
+          templateUrl:    'views/mission.html',
+          controller:     'MissionCtrl'
+        })
+        .state('code', {
+          url:            '/',
+          templateUrl:    'views/code.html',
+          controller:     'CodeCtrl'
+        })
+        .state('login', {
+          url:            '/',
+          templateUrl:    'views/forge-login.html',
+          controller:     'LoginCtrl'
+        })
+        .state('forge', {
+          templateUrl:    'views/forge.html',
+          controller:     'ForgeCtrl'
+        })
+      ;
+    })
+    .factory('Session',
+      function($resource) {
+        return $resource('http://stage.dronesmith.io/api/session', {},
+        {
+          sync: {
+            method: 'PUT'
+          },
+          authenticate: {
+            method: 'POST'
+          }
+        });
+    })
+
+    /*request animation frame polyfill service:*/
+    .factory('RequestAnimationFrame', ['$window', function($window){
+      'use strict';
+      var lastTime = 0,
+          vendors = ['ms', 'moz', 'webkit', 'o'],
+          x,
+          length,
+          currTime,
+          timeToCall;
+
+      for (x = 0, length = vendors.length; x < length && !$window.requestAnimationFrame; ++x) {
+          $window.requestAnimationFrame = $window[
+              vendors[x] + 'RequestAnimationFrame'
+          ];
+          $window.cancelAnimationFrame = $window[
+              vendors[x] + 'CancelAnimationFrame'
+          ] || $window[vendors[x] + 'CancelRequestAnimationFrame'];
+      }
+
+      if (!$window.requestAnimationFrame) {
+            requestAnimationFrame = function (callback, element) {
+              currTime = new Date().getTime();
+              timeToCall = Math.max(0, 16 - (currTime - lastTime));
+              lastTime = currTime + timeToCall;
+              return $window.setTimeout(function () {
+                  callback(currTime + timeToCall);
+              }, timeToCall);
+          }
+        }
+
+      if (!$window.cancelAnimationFrame) {
+          cancelAnimationFrame = function (id) {
+              clearTimeout(id);
+          };
+      }
+
+      return {
+        setCallback : function(callback){
+          requestAnimationFrame(callback)
+        }
+      }
+    }
+  ])
+
+    /*nodecopter stream service:*/
+    .factory('VideoStream', ['$window', 'RequestAnimationFrame', function($window, animate){
+
+      'use strict';
+      var NS,
+          socket,
+          avc,
+          webGLCanvas,
+          width,
+          height,
+          callbackOnce = null;
+
+      function setupAvc() {
+          avc = new Avc();
+          avc.configure({
+              filter: 'original',
+              filterHorLuma: 'optimized',
+              filterVerLumaEdge: 'optimized',
+              getBoundaryStrengthsA: 'optimized'
+          });
+          avc.onPictureDecoded = handleDecodedFrame;
+      }
+
+      function handleNalUnits(message) {
+                    // console.log(message);
+          avc.decode(new Uint8Array(message));
+      }
+
+      function handleDecodedFrame(buffer, bufWidth, bufHeight) {
+          var callback;
+
+          animate.setCallback(function () {
+              var lumaSize = bufWidth * bufHeight,
+                  chromaSize = lumaSize >> 2;
+
+              webGLCanvas.YTexture.fill(buffer.subarray(0, lumaSize));
+              webGLCanvas.UTexture.fill(buffer.subarray(lumaSize, lumaSize + chromaSize));
+              webGLCanvas.VTexture.fill(buffer.subarray(lumaSize + chromaSize, lumaSize + 2 * chromaSize));
+              webGLCanvas.drawScene();
+          });
+
+          // call callback with Y portion (grayscale image)
+          if (null !== callbackOnce && width) {
+              callback = callbackOnce;
+              callbackOnce = null;
+              // decoded buffer size may be larger,
+              // so use subarray with actual dimensions
+              callback(buffer.subarray(0, width * height));
+          }
+      }
+
+      function setupCanvas(div) {
+          var canvas = $window.document.createElement('canvas');
+
+          width = div.attributes.width ? div.attributes.width.value : 640;
+          height = div.attributes.height ? div.attributes.height.value : 360;
+
+          canvas.width = width;
+          canvas.height = height;
+          canvas.style.backgroundColor = "#333333";
+          div.appendChild(canvas);
+
+          webGLCanvas = new YUVWebGLCanvas(canvas, new Size(width, height));
+      }
+
+      return {
+        NS: function (div, options) {
+            var hostname, port;
+            options = options || {};
+            hostname = options.hostname || $window.document.location.hostname;
+            port = options.port || $window.document.location.port;
+
+            setupCanvas(div);
+            setupAvc();
+
+            console.log(div, options);
+
+            parser = new Parser();
+              tcpVideoStream.on('data', function (data) {
+                parser.write(data);
+              });
+
+              parser.on('data', function (data) {
+                handleNalUnits(data.payload);
+              });
+
+              parser.on('end', function(data) {
+                output.end();
+              });
+            }
+          }
+
+      // enqueue callback oto be called with next (black&white) frame
+      NS.prototype.onNextFrame = function (callback) {
+          callbackOnce = callback;
+      };
+    }])
+
+    // Want this to be a service so the mission data can be preserved.
     .factory('FlightSaver', function() {
       var firstEvent = false;
       var activeFd = null;
@@ -711,7 +776,9 @@ console.log(client);
       };
 
     })
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, MissionPlayer, FlightSaver) {
+
+    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
+
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
@@ -724,6 +791,8 @@ console.log(client);
       $scope.selectedLed = $scope.leds[0];
       $scope.flightPerf = 'wave';
       $scope.graphSelect = 'altitude';
+      $scope.videoStream = VideoStream.NS($window.document.getElementById("droneStream"), {hostname: '127.0.0.1'});
+
 
       /*
        * Class for generating real-time data for the area, line, and bar plots.
