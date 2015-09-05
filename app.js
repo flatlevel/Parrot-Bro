@@ -4,6 +4,7 @@
 
   // System Code
   var http = require('http');
+  var fs = require('fs');
 
   var async = require('async');
 
@@ -117,62 +118,6 @@ console.log(client);
         });
     })
 
-// UX code
-  angular
-    .module('ForgeMod', [
-      'ngRoute',
-      'ngResource',
-      'ui.router',
-      'ngAnimate',
-      'ui.bootstrap',
-      'ui.utils',
-      'ngDragDrop',
-      'ngWebSocket',
-      'ng.epoch',
-      'ui.ace',
-      'googlechart'
-    ])
-    .config(function($stateProvider) {
-      $stateProvider
-        .state('fly', {
-          url:            '/',
-          templateUrl:    'views/fly.html',
-          controller:     'FlightCtrl'
-        })
-        .state('mission', {
-          url:            '/',
-          templateUrl:    'views/mission.html',
-          controller:     'MissionCtrl'
-        })
-        .state('code', {
-          url:            '/',
-          templateUrl:    'views/code.html',
-          controller:     'CodeCtrl'
-        })
-        .state('login', {
-          url:            '/',
-          templateUrl:    'views/forge-login.html',
-          controller:     'LoginCtrl'
-        })
-        .state('forge', {
-          templateUrl:    'views/forge.html',
-          controller:     'ForgeCtrl'
-        })
-      ;
-    })
-    .factory('Session',
-      function($resource) {
-        return $resource('http://stage.dronesmith.io/api/session', {},
-        {
-          sync: {
-            method: 'PUT'
-          },
-          authenticate: {
-            method: 'POST'
-          }
-        });
-    })
-
     /*request animation frame polyfill service:*/
     .factory('RequestAnimationFrame', ['$window', function($window){
       'use strict';
@@ -217,10 +162,9 @@ console.log(client);
     }
   ])
 
-    /*nodecopter stream service:*/
-    .factory('VideoStream', ['$window', 'RequestAnimationFrame', function($window, animate){
 
-      'use strict';
+    .factory('VideoStream', ['$window', 'RequestAnimationFrame', function($window, animate) {
+
       var NS,
           socket,
           avc,
@@ -299,6 +243,10 @@ console.log(client);
                 parser.write(data);
               });
 
+              parser.on('error', function(data) {
+                console.log('resetting...');
+              });
+
               parser.on('data', function (data) {
                 handleNalUnits(data.payload);
               });
@@ -333,7 +281,7 @@ console.log(client);
           }
 
           startDate = new Date();
-          activeFd = require('fs').createWriteStream('flights/flight_'+startDate+'.json');
+          activeFd = fs.createWriteStream('flights/flight_'+startDate+'.json');
 
             // If the OS can't keep up with our write requests, we need to buffer
             // and wait.
@@ -385,6 +333,7 @@ console.log(client);
       }
     })
     .factory('VideoPlayer', function() {
+      var fs = require('fs');
       var outputStream = null;
       var parser = new Parser();
       parser
@@ -412,7 +361,7 @@ console.log(client);
           }
 
           fs.mkdir('videos', function () {});
-          outputStream = require('fs').createWriteStream('videos/'+fname+'.h264');
+          outputStream = fs.createWriteStream('videos/'+fname+'.h264');
           video.pipe(parser);
         },
         end: function() {
