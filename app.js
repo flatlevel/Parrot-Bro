@@ -98,7 +98,7 @@ console.log(client);
           }
         });
     })
-    
+
     /*request animation frame polyfill service:*/
     .factory('RequestAnimationFrame', ['$window', function($window){
 
@@ -234,7 +234,7 @@ console.log(client);
             output.end();
           });
 
-      };
+      }
     }
       // enqueue callback oto be called with next (black&white) frame
       NS.prototype.onNextFrame = function (callback) {
@@ -721,15 +721,9 @@ console.log(client);
       };
 
     })
-<<<<<<< HEAD
-<<<<<<< HEAD
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, MissionPlayer, FlightSaver) {
-=======
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope, MissionPlayer, FlightSaver, VideoStream) {
->>>>>>> Change NodeCopter stream into an angular service
-=======
-    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $window, MissionPlayer, FlightSaver, VideoStream) {
->>>>>>> Change to  service for decoupling and testability
+    
+    .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
+
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
