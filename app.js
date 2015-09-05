@@ -336,7 +336,7 @@ console.log(client);
             output.end();
           });
 
-      };
+      }
     }
       // enqueue callback oto be called with next (black&white) frame
       NS.prototype.onNextFrame = function (callback) {
@@ -825,6 +825,7 @@ console.log(client);
     })
 
     .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
+
       $scope.telemetry = {};
       $scope.isFlying = false;
       $scope.inMotion = false;
