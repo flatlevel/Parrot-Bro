@@ -867,7 +867,7 @@ console.log(client);
             case 'zVelocity': $scope.realtimeLineFeed = liveLineData.next(data.demo.zVelocity); break;
           }
         }
-        
+
         $interval (function(){
           if (!$rootScope.isConnected) {
             $scope.telemetry.demo.altitude = 0;
@@ -1185,7 +1185,7 @@ console.log(client);
         ;
       }
     })
-    .controller ('ForgeCtrl', function($scope, $state, Session, $http, $timeout) {
+    .controller ('ForgeCtrl', function($scope, $state, Session, $http, $timeout, $filter) {
       var fs = require('fs');
       $scope.userInfo = null;
 
