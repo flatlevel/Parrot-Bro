@@ -1147,7 +1147,7 @@ console.log(client);
         ;
       }
     })
-    .controller ('ForgeCtrl', function($scope, $state, Session, $http, $timeout, $filter) {
+    .controller ('ForgeCtrl', function($scope, $state, Session, $http, $timeout) {
       var fs = require('fs');
       $scope.userInfo = null;
 
@@ -1356,6 +1356,7 @@ console.log(client);
                 })
 
                 $scope.selectedFlight = $scope.flightLogs[0];
+
                 console.log($scope.selectedFlight)
                 $scope.downloadFile = function () {
                   fs.writeFile("flights/" + $scope.selectedFlight.start, JSON.stringify($scope.selectedFlight), function (err) {
