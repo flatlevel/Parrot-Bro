@@ -43,7 +43,6 @@ console.log(client);
   // require("dronestream").listen(server);
   // server.listen(5555);
 
-<<<<<<< HEAD
 // UX code
   angular
     .module('ForgeMod', [
