@@ -4,6 +4,7 @@
 
   // System Code
   var http = require('http');
+  var fs = require('fs');
 
   var async = require('async');
 
@@ -315,7 +316,7 @@ console.log(client);
           }
 
           startDate = new Date();
-          activeFd = require('fs').createWriteStream('flights/flight_'+startDate+'.json');
+          activeFd = fs.createWriteStream('flights/flight_'+startDate+'.json');
 
             // If the OS can't keep up with our write requests, we need to buffer
             // and wait.
@@ -367,6 +368,7 @@ console.log(client);
       }
     })
     .factory('VideoPlayer', function() {
+      var fs = require('fs');
       var outputStream = null;
       var parser = new Parser();
       parser
@@ -394,7 +396,7 @@ console.log(client);
           }
 
           fs.mkdir('videos', function () {});
-          outputStream = require('fs').createWriteStream('videos/'+fname+'.h264');
+          outputStream = fs.createWriteStream('videos/'+fname+'.h264');
           video.pipe(parser);
         },
         end: function() {
