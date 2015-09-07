@@ -43,7 +43,7 @@ console.log(client);
   // require("dronestream").listen(server);
   // server.listen(5555);
 
-  // rewrite the library function not to keep trying to stream video 
+  // HACK SOLUTION: rewrite the library function not to keep trying to stream video 
   // when there is an error
   var Client = require('./node_modules/ar-drone/lib/Client.js');
 
@@ -694,11 +694,11 @@ console.log(client);
 
       CheckConnection($scope.currentIp);
 
-      $rootScope.$on('disconnected', function () {
+      $scope.$on('disconnected', function () {
         $scope.DroneStatus = "Not connected";
         $scope.isConnected = false;
       });
-      $rootScope.$on('isConnected', function () {
+      $scope.$on('isConnected', function () {
         $scope.DroneStatus = "Connected on " + $scope.currentIp;
         $scope.isConnected = true;
       });
@@ -902,7 +902,7 @@ console.log(client);
         }
       });
 
-      $rootScope.$on('disconnected', function () {
+      $scope.$on('disconnected', function () {
         $scope.telemetry.demo.altitude = 0;
         $scope.telemetry.demo.rotation.yaw = 0;
         $scope.telemetry.demo.rotation.pitch = 0;
