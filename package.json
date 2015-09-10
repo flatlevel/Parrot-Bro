@@ -9,9 +9,9 @@
   "author": "Geoff Gardner",
   "license": "ISC",
   "window": {
-    "title": "Parrot Bro",
+    "title": "Forge",
     "icon": "",
-    "toolbar": true,
+    "toolbar": false,
     "frame": true,
     "min_width": 400,
     "min_height": 520,
