@@ -11,9 +11,8 @@
   var drone = require('ar-drone');
   var Parser = require('./node_modules/ar-drone/lib/video/PaVEParser.js');
   var parser = new Parser();
-
+  var ping = require('ping');
   var client = drone.createClient();
-  var tcpVideoStream = client.getVideoStream();
   // var output = require('fs').createWriteStream('./vid.mp4');
   client.config('video:video_channel', 0);
 
@@ -26,12 +25,12 @@ console.log(client);
   // tcpVideoStream.connect(function() {
   //   console.log('connected.');
 
-    tcpVideoStream.on('error', function (err) {
-      console.log(err.message);
-      tcpVideoStream.end();
-      tcpVideoStream.emit("end");
-      // init();
-    });
+    // tcpVideoStream.on('error', function (err) {
+    //   console.log(err.message);
+    //   tcpVideoStream.end();
+    //   tcpVideoStream.emit("end");
+    //   // init();
+    // });
     // //
     // // parser = new Parser();
     // tcpVideoStream.on('data', function (data) {
@@ -43,6 +42,25 @@ console.log(client);
   // var server = http.createServer(function(req, res) {});
   // require("dronestream").listen(server);
   // server.listen(5555);
+
+  // HACK SOLUTION: rewrite the library function not to keep trying to stream video 
+  // when there is an error
+  var Client = require('./node_modules/ar-drone/lib/Client.js');
+
+  Client.prototype._newTcpVideoStream = function () {
+    var stream = new Client.TcpVideoStream(this._options);
+    var callback = function (err) {
+      if (err) {
+        console.log('TcpVideoStream error: %s', err.message);
+      }
+    };
+
+    stream.connect(callback);
+    stream.on('error', callback);
+    return stream;
+  };
+
+  var tcpVideoStream = client.getVideoStream();
 
 // UX code
   angular
@@ -87,6 +105,20 @@ console.log(client);
         })
       ;
     })
+
+    .factory('CheckConnection', ['$interval', '$rootScope', function($interval, $rootScope){    
+      return function (currentIP){
+        $interval(function () {
+          ping.sys.probe(currentIP, function (isConnected) {
+            if (isConnected) 
+              $rootScope.$broadcast('isConnected');
+            else
+              $rootScope.$broadcast('disconnected');
+          });
+        }, 1000)
+      };
+    }])
+
     .factory('Session',
       function($resource) {
         return $resource('http://stage.dronesmith.io/api/session', {},
@@ -636,7 +668,7 @@ console.log(client);
         }
       };
     })
-    .controller('AppCtrl', function($scope, $log, $state, $modal, $interval, $rootScope) {
+    .controller('AppCtrl', function($scope, $log, $state, $modal, $interval, $rootScope, $timeout, CheckConnection) {
       $scope.status = null;
       $scope.currentIp = "192.168.1.1";
       $scope.telemetry = {};
@@ -645,9 +677,7 @@ console.log(client);
       $state.go('fly');
       $scope.currentState = 'fly';
       $scope.alerts= [ ];
-      $rootScope.isConnected = false;
       var prevHeader =  0;
-      var ping = require('ping');
 
       $rootScope.leds = ['blinkGreenRed', 'blinkGreen', 'blinkRed', 'blinkOrange', 'snakeGreenRed',
         'fire', 'standard', 'red', 'green', 'redSnake', 'blank', 'rightMissile',
@@ -662,12 +692,20 @@ console.log(client);
         'doublePhiThetaMixed', 'flipAhead', 'flipBehind', 'flipLeft', 'flipRight'];
 
 
+      CheckConnection($scope.currentIp);
+
+      $scope.$on('disconnected', function () {
+        $scope.DroneStatus = "Not connected";
+        $scope.isConnected = false;
+      });
+      $scope.$on('isConnected', function () {
+        $scope.DroneStatus = "Connected on " + $scope.currentIp;
+        $scope.isConnected = true;
+      });
+
       client.on('navdata', function(data) {
         $scope.telemetry = data;
         prevHeader = data.header;
-        $scope.isConnected = true;
-        $scope.DroneStatus = "Connected on " + $scope.currentIp;
-        $rootScope.isConnected = true;
       });
 
       // $interval(function () {
@@ -675,16 +713,6 @@ console.log(client);
       //     $scope.isConnected = false;
       //   }
       // }, 5000);
-
-      $interval(function () {
-        ping.sys.probe($scope.currentIp, function (isConnected) {
-          if (!isConnected) {
-            $scope.DroneStatus = "Not connected";
-            $rootScope.isConnected = false;
-            $scope.isConnected = false;
-          }
-        });
-      }, 1000);
 
       $scope.addAlert = function(type, msg) {
         $scope.alerts.push({type: type, msg: msg});
@@ -728,7 +756,18 @@ console.log(client);
 
     .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
 
-      $scope.telemetry = {};
+      $scope.telemetry = {}; 
+      $scope.telemetry.demo = {};
+      $scope.telemetry.demo.rotation = {};
+      $scope.telemetry.demo.altitude = 0;
+      $scope.telemetry.demo.rotation.yaw = 0;
+      $scope.telemetry.demo.rotation.pitch = 0;
+      $scope.telemetry.demo.rotation.roll = 0;
+      $scope.telemetry.demo.batteryPercentage = 0;
+      $scope.telemetry.demo.xVelocity = 0;
+      $scope.telemetry.demo.yVelocity = 0;
+      $scope.telemetry.demo.zVelocity = 0;
+
       $scope.isFlying = false;
       $scope.inMotion = false;
       $scope.currentMove = 0.2;
@@ -741,7 +780,6 @@ console.log(client);
       $scope.flightPerf = 'wave';
       $scope.graphSelect = 'altitude';
       $scope.videoStream = VideoStream.NS($window.document.getElementById("droneStream"), {hostname: '127.0.0.1'});
-
 
       /*
        * Class for generating real-time data for the area, line, and bar plots.
@@ -862,19 +900,17 @@ console.log(client);
             case 'zVelocity': $scope.realtimeLineFeed = liveLineData.next(data.demo.zVelocity); break;
           }
         }
+      });
 
-        $interval (function(){
-          if (!$rootScope.isConnected) {
-            $scope.telemetry.demo.altitude = 0;
-            $scope.telemetry.demo.rotation.yaw = 0;
-            $scope.telemetry.demo.rotation.pitch = 0;
-            $scope.telemetry.demo.rotation.roll = 0;
-            $scope.telemetry.demo.batteryPercentage = 0;
-            $scope.telemetry.demo.xVelocity = 0;
-            $scope.telemetry.demo.yVelocity = 0;
-            $scope.telemetry.demo.zVelocity = 0;
-          }
-        }, 1000);
+      $scope.$on('disconnected', function () {
+        $scope.telemetry.demo.altitude = 0;
+        $scope.telemetry.demo.rotation.yaw = 0;
+        $scope.telemetry.demo.rotation.pitch = 0;
+        $scope.telemetry.demo.rotation.roll = 0;
+        $scope.telemetry.demo.batteryPercentage = 0;
+        $scope.telemetry.demo.xVelocity = 0;
+        $scope.telemetry.demo.yVelocity = 0;
+        $scope.telemetry.demo.zVelocity = 0;
       });
 
       $scope.Clear = function() {
