@@ -18,6 +18,10 @@
 
 var fpvObject;
 
+function getUserHome() {
+  return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+}
+
 console.log(client);
 
   // tcpVideoStream.on('data', console.log);
@@ -43,7 +47,7 @@ console.log(client);
   // require("dronestream").listen(server);
   // server.listen(5555);
 
-  // HACK SOLUTION: rewrite the library function not to keep trying to stream video 
+  // HACK SOLUTION: rewrite the library function not to keep trying to stream video
   // when there is an error
   var Client = require('./node_modules/ar-drone/lib/Client.js');
 
@@ -106,11 +110,11 @@ console.log(client);
       ;
     })
 
-    .factory('CheckConnection', ['$interval', '$rootScope', function($interval, $rootScope){    
+    .factory('CheckConnection', ['$interval', '$rootScope', function($interval, $rootScope){
       return function (currentIP){
         $interval(function () {
           ping.sys.probe(currentIP, function (isConnected) {
-            if (isConnected) 
+            if (isConnected)
               $rootScope.$broadcast('isConnected');
             else
               $rootScope.$broadcast('disconnected');
@@ -295,7 +299,7 @@ console.log(client);
           }
 
           startDate = new Date();
-          activeFd = fs.createWriteStream('flights/flight_'+startDate+'.json');
+          activeFd = fs.createWriteStream(getUserHome() + '/flights/flight_'+startDate+'.json');
 
             // If the OS can't keep up with our write requests, we need to buffer
             // and wait.
@@ -374,8 +378,8 @@ console.log(client);
             outputStream.end();
           }
 
-          fs.mkdir('videos', function () {});
-          outputStream = fs.createWriteStream('videos/'+fname+'.h264');
+          fs.mkdir(getUserHome() + '/videos', function () {});
+          outputStream = fs.createWriteStream(getUserHome() + '/videos/'+fname+'.h264');
           video.pipe(parser);
         },
         end: function() {
@@ -756,7 +760,7 @@ console.log(client);
 
     .controller('FlightCtrl', function($scope, $timeout, $rootScope, $interval, $window, MissionPlayer, FlightSaver, VideoStream) {
 
-      $scope.telemetry = {}; 
+      $scope.telemetry = {};
       $scope.telemetry.demo = {};
       $scope.telemetry.demo.rotation = {};
       $scope.telemetry.demo.altitude = 0;
@@ -1205,7 +1209,7 @@ console.log(client);
       var fs = require('fs');
       $scope.userInfo = null;
 
-      fs.mkdir('flights', function () {});
+      fs.mkdir(getUserHome() + '/flights', function () {});
       //
       // Syncing algo
       // TODO add memory limit
@@ -1224,7 +1228,7 @@ console.log(client);
                     .post('http://stage.dronesmith.io/api/flight/' + $scope.userInfo._id, json)
                     .success(function(data) {
                       json._id = data.flight;
-                      fs.writeFile('flights/' + file, JSON.stringify(json), function(err) {
+                      fs.writeFile(getUserHome() + '/flights/' + file, JSON.stringify(json), function(err) {
                         if (err) {
                           done(err);
                         } else {
@@ -1245,7 +1249,7 @@ console.log(client);
 
           async.waterfall([
             function(callback) {
-              fs.readFile('flights/' + file, callback);
+              fs.readFile(getUserHome() + '/flights/' + file, callback);
             },
             processFile
           ], function(error, result) {
@@ -1258,7 +1262,7 @@ console.log(client);
           });
         }
 
-        var files = fs.readdirSync('flights');
+        var files = fs.readdirSync(getUserHome() + '/flights');
         // OSX has a mental disability.
         var badfile = files.indexOf('.DS_Store');
 
@@ -1413,10 +1417,10 @@ console.log(client);
 
                 console.log($scope.selectedFlight)
                 $scope.downloadFile = function () {
-                  fs.writeFile("flights/" + $scope.selectedFlight.start, JSON.stringify($scope.selectedFlight), function (err) {
+                  fs.writeFile(getUserHome() + "/flights/" + $scope.selectedFlight.start, JSON.stringify($scope.selectedFlight), function (err) {
                     if (err)
                       throw err;
-                    console.log('[sync] Saved to', "flights/" + $scope.selectedFlight.start);
+                    console.log('[sync] Saved to', getUserHome() + "/flights/" + $scope.selectedFlight.start);
                   });
                 }
 
