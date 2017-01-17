@@ -1,3 +1,4 @@
+<img src="http://i.imgur.com/ScsUTEk.jpg"></img>
 
 # Parrot Bro v0.1
 
